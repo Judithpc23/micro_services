@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { CreateServiceForm } from "../components/ServiceForm"
-import { ServiceCard } from "../components/ServiceCard"
+import { CreateServiceForm } from "@/components/create-service-form"
+import { ServiceCard } from "@/components/service-card"
 import { Code2 } from "lucide-react"
 
 export type ServiceType = "execution" | "roble"
@@ -91,11 +91,10 @@ export default function Home() {
                 {services.map((service) => (
                   <ServiceCard
                     key={service.id}
-                    svc={service as any}
+                    service={service}
                     onDelete={handleDeleteService}
-                    onEdit={() => handleEditService(service.id)}
-                    onRun={() => handleExecuteService(service.id)}
-                    onStop={() => {/* TODO: Implement stop functionality */}}
+                    onEdit={handleEditService}
+                    onExecute={handleExecuteService}
                   />
                 ))}
               </div>

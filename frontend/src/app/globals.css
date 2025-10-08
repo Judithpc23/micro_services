@@ -1,5 +1,5 @@
-/* @tailwind directives removed because Tailwind CSS is not configured in this environment. */
-/* If you set up Tailwind CSS, you can add them back. */
+@import "tailwindcss";
+@import "tw-animate-css";
 
 
 :root {
