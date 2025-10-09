@@ -1,1 +1,55 @@
 import type { Microservice } from "@/lib/types/microservice"
+
+export function generateDockerCompose(service: Microservice, port: number): string {
+	const internalPort = service.language === "python" ? 8000 : 3000
+	const env: Record<string, string> = {
+		SERVICE_NAME: service.name,
+		SERVICE_TYPE: service.type,
+	}
+	if (service.type === "roble" && service.tokenDatabase) env["SERVICE_TOKEN"] = service.tokenDatabase
+
+	const compose = {
+		version: "3.8",
+		services: {
+			[service.id]: {
+				container_name: `microservice-${service.id}`,
+				build: { context: ".", dockerfile: `Dockerfile.${service.id}` },
+				ports: [`${port}:${internalPort}`],
+				environment: env,
+				restart: "unless-stopped",
+				networks: ["microservices-network"],
+			},
+		},
+		networks: { "microservices-network": { driver: "bridge" } },
+	}
+	return convertToYAML(compose)
+}
+
+export function generateStartScript(serviceId: string): string {
+	return `#!/bin/bash\nset -e\n\nSTACK=docker-compose.${serviceId}.yml\necho "Starting ${serviceId}"\ndocker-compose -f $STACK up -d\n`}
+
+export function generateStopScript(serviceId: string): string {
+	return `#!/bin/bash\nset -e\n\nSTACK=docker-compose.${serviceId}.yml\necho "Stopping ${serviceId}"\ndocker-compose -f $STACK down\n`}
+
+function convertToYAML(obj: any, indent = 0): string {
+	const spaces = "  ".repeat(indent)
+	let yaml = ""
+	for (const [key, value] of Object.entries(obj)) {
+		if (value === null || value === undefined) continue
+		if (typeof value === "object" && !Array.isArray(value)) {
+			yaml += `${spaces}${key}:\n${convertToYAML(value, indent + 1)}`
+		} else if (Array.isArray(value)) {
+			yaml += `${spaces}${key}:\n`
+			value.forEach((item) => {
+				if (typeof item === "object") {
+					yaml += `${spaces}  -\n${convertToYAML(item, indent + 2)}`
+				} else {
+					yaml += `${spaces}  - ${item}\n`
+				}
+			})
+		} else {
+			yaml += `${spaces}${key}: ${value}\n`
+		}
+	}
+	return yaml
+}

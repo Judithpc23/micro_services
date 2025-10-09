@@ -145,24 +145,19 @@ export default function Home() {
 
   const handleExecuteService = async (id: string) => {
     try {
-      const response = await fetch(`/api/services/${id}/execute`, {
-        method: "POST",
-      })
-
-      if (!response.ok) throw new Error("Failed to execute service")
-
-      const result = await response.json()
-      toast({
-        title: "Execution Started",
-        description: result.message,
-      })
+      const response = await fetch(`/api/services/${id}/execute`, { method: "POST" })
+      const json = await (async () => {
+        try { return await response.json() } catch { return null }
+      })()
+      if (!response.ok) {
+        const msg = json?.error || json?.message || `Failed to execute (status ${response.status})`
+        throw new Error(msg)
+      }
+      toast({ title: "Execution Started", description: json?.message || "Service is running" })
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to execute service"
       console.error("[v0] Error executing service:", error)
-      toast({
-        title: "Error",
-        description: "Failed to execute service",
-        variant: "destructive",
-      })
+      toast({ title: "Error", description: message, variant: "destructive" })
     }
   }
 

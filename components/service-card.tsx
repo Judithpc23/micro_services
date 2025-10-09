@@ -4,9 +4,10 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Edit2, Play, Trash2, Lock, FileCode, Square, ExternalLink, Activity } from "lucide-react"
+import { Edit2, Play, Trash2, Lock, FileCode, Square, ExternalLink, Activity, TerminalSquare } from "lucide-react"
 import type { Microservice } from "@/lib/types/microservice"
 import { DockerfileViewer } from "./dockerfile-viewer"
+import { InvokeServiceDialog } from "./invoke-service-dialog"
 import type { ContainerStatus } from "@/lib/backend/container-manager"
 
 interface ServiceCardProps {
@@ -27,6 +28,7 @@ export function ServiceCard({ service, onDelete, onEdit, onExecute }: ServiceCar
   const [showDockerfile, setShowDockerfile] = useState(false)
   const [containerInfo, setContainerInfo] = useState<ContainerInfo | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [showInvoke, setShowInvoke] = useState(false)
 
   const languageColors = {
     python: "bg-blue-500/10 text-blue-400 border-blue-500/20",
@@ -90,7 +92,6 @@ export function ServiceCard({ service, onDelete, onEdit, onExecute }: ServiceCar
       stopped: { color: "bg-gray-500/10 text-gray-400 border-gray-500/20", label: "Stopped" },
       starting: { color: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20", label: "Starting..." },
       running: { color: "bg-green-500/10 text-green-400 border-green-500/20", label: "Running" },
-      stopping: { color: "bg-orange-500/10 text-orange-400 border-orange-500/20", label: "Stopping..." },
       error: { color: "bg-red-500/10 text-red-400 border-red-500/20", label: "Error" },
     }
 
@@ -104,7 +105,7 @@ export function ServiceCard({ service, onDelete, onEdit, onExecute }: ServiceCar
     )
   }
 
-  const isTransitioning = containerInfo?.status === "starting" || containerInfo?.status === "stopping"
+  const isTransitioning = containerInfo?.status === "starting"
   const isRunning = containerInfo?.status === "running"
   const isStopped = !containerInfo || containerInfo.status === "stopped" || containerInfo.status === "error"
 
@@ -204,6 +205,15 @@ export function ServiceCard({ service, onDelete, onEdit, onExecute }: ServiceCar
             <Button
               size="sm"
               variant="outline"
+              onClick={() => setShowInvoke(true)}
+              className="border-border hover:bg-secondary"
+              title="Probar microservicio"
+            >
+              <TerminalSquare className="h-3 w-3" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
               onClick={() => onDelete(service.id)}
               disabled={isRunning || isTransitioning}
               className="border-destructive/30 text-destructive hover:bg-destructive/10 disabled:opacity-50"
@@ -229,6 +239,7 @@ export function ServiceCard({ service, onDelete, onEdit, onExecute }: ServiceCar
         open={showDockerfile}
         onOpenChange={setShowDockerfile}
       />
+      <InvokeServiceDialog serviceId={service.id} open={showInvoke} onOpenChange={setShowInvoke} />
     </>
   )
 }

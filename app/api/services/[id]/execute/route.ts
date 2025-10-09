@@ -3,9 +3,9 @@ import { servicesStore } from "@/lib/backend/services-store"
 import { containerManager } from "@/lib/backend/container-manager"
 
 // POST /api/services/[id]/execute - Execute a service (start container and return endpoint)
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params
+    const { id } = await params
     const service = servicesStore.getById(id)
 
     if (!service) {

@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server"
 import { servicesStore } from "@/lib/backend/services-store"
-import type { ServiceLanguage, ServiceType } from "@/app/page"
+import { validateServiceCode } from "@/lib/backend/code-validator"
 
 // GET /api/services/[id] - Get a single service
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params
+    const { id } = await params
     const service = servicesStore.getById(id)
 
     if (!service) {
@@ -20,11 +20,11 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 // PUT /api/services/[id] - Update a service
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
-    const { name, description, language, code, type } = body
+  const { name, description, language, code, type, tokenDatabase } = body
 
     // Validation
     if (name !== undefined && typeof name !== "string") {
@@ -42,20 +42,39 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (type !== undefined && !["execution", "roble"].includes(type)) {
       return NextResponse.json({ error: "Invalid service type" }, { status: 400 })
     }
+    if (type === "roble" && tokenDatabase !== undefined && typeof tokenDatabase !== "string") {
+      return NextResponse.json({ error: "Invalid database token" }, { status: 400 })
+    }
+
+    // If code or language is being updated, re-validate for unsafe patterns
+    if (code !== undefined || language !== undefined) {
+      const lang = (language as any) || servicesStore.getById(id)?.language
+      if (lang && code) {
+        const validation = validateServiceCode({ language: lang, code })
+        if (!validation.valid) {
+          return NextResponse.json(
+            { error: "Unsafe code detected", reasons: validation.reasons },
+            { status: 400 },
+          )
+        }
+      }
+    }
 
     const updates: Partial<{
       name: string
       description: string
-      language: ServiceLanguage
+      language: "python" | "javascript"
       code: string
-      type: ServiceType
+      type: "execution" | "roble"
+      tokenDatabase?: string
     }> = {}
 
     if (name !== undefined) updates.name = name
     if (description !== undefined) updates.description = description
-    if (language !== undefined) updates.language = language as ServiceLanguage
+  if (language !== undefined) updates.language = language as "python" | "javascript"
     if (code !== undefined) updates.code = code
-    if (type !== undefined) updates.type = type as ServiceType
+  if (type !== undefined) updates.type = type as "execution" | "roble"
+  if (tokenDatabase !== undefined) updates.tokenDatabase = tokenDatabase
 
     const updatedService = servicesStore.update(id, updates)
 
@@ -71,9 +90,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 }
 
 // DELETE /api/services/[id] - Delete a service
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params
+    const { id } = await params
     const deleted = servicesStore.delete(id)
 
     if (!deleted) {

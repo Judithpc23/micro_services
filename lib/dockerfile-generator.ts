@@ -1,4 +1,4 @@
-import type { Microservice } from "@/app/page"
+import type { Microservice } from "@/lib/types/microservice"
 
 export function generateDockerfile(service: Microservice): string {
   if (service.language === "python") {
@@ -9,7 +9,7 @@ export function generateDockerfile(service: Microservice): string {
 }
 
 function generatePythonDockerfile(service: Microservice): string {
-  const hasToken = service.type === "roble" && service.token
+  const hasToken = service.type === "roble" && service.tokenDatabase
 
   return `# Dockerfile for ${service.name}
 # Language: Python
@@ -27,7 +27,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY main.py .
 
 # Set environment variables
-${hasToken ? `ENV ROBLE_TOKEN="${service.token}"` : "# No token required"}
+${hasToken ? `ENV ROBLE_TOKEN="${service.tokenDatabase}"` : "# No token required"}
 ENV SERVICE_NAME="${service.name}"
 ENV SERVICE_TYPE="${service.type}"
 
@@ -40,7 +40,7 @@ CMD ["python", "main.py"]
 }
 
 function generateJavaScriptDockerfile(service: Microservice): string {
-  const hasToken = service.type === "roble" && service.token
+  const hasToken = service.type === "roble" && service.tokenDatabase
 
   return `# Dockerfile for ${service.name}
 # Language: JavaScript (Node.js)
@@ -58,7 +58,7 @@ RUN npm install --production
 COPY index.js .
 
 # Set environment variables
-${hasToken ? `ENV ROBLE_TOKEN="${service.token}"` : "# No token required"}
+${hasToken ? `ENV ROBLE_TOKEN="${service.tokenDatabase}"` : "# No token required"}
 ENV SERVICE_NAME="${service.name}"
 ENV SERVICE_TYPE="${service.type}"
 

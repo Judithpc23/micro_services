@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { servicesStore } from "@/lib/backend/services-store"
 import type { Microservice } from "@/lib/types/microservice"
+import { validateServiceCode } from "@/lib/backend/code-validator"
 
 // GET /api/services - Get all services
 export async function GET() {
@@ -17,7 +18,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, description, language, code, type } = body
+  const { name, description, language, code, type, tokenDatabase } = body
 
     // Validation
     if (!name || typeof name !== "string") {
@@ -35,6 +36,15 @@ export async function POST(request: Request) {
     if (!["execution", "roble"].includes(type)) {
       return NextResponse.json({ error: "Invalid service type" }, { status: 400 })
     }
+    if (type === "roble" && (!tokenDatabase || typeof tokenDatabase !== "string")) {
+      return NextResponse.json({ error: "Database token is required for Roble services" }, { status: 400 })
+    }
+
+    // Unsafe code validation
+    const validation = validateServiceCode({ language, code })
+    if (!validation.valid) {
+      return NextResponse.json({ error: "Unsafe code detected", reasons: validation.reasons }, { status: 400 })
+    }
 
     // Create service
     const newService: Microservice = {
@@ -44,6 +54,7 @@ export async function POST(request: Request) {
       language: language as any,
       code,
       type: type as any,
+      tokenDatabase: type === "roble" ? tokenDatabase : undefined,
       createdAt: new Date(),
     }
 
