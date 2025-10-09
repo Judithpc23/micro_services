@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -58,6 +58,12 @@ export function DockerfileViewer({ serviceId, serviceName, open, onOpenChange }:
       fetchDockerfile()
     }
   }
+
+  // Ensure we fetch files if the dialog is opened programmatically by parent
+  useEffect(() => {
+    if (open && !files) fetchDockerfile()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   const copyToClipboard = async (text: string, tab: string) => {
     await navigator.clipboard.writeText(text)

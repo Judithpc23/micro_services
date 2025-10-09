@@ -31,7 +31,9 @@ class ContainerManager {
 		const existing = this.containers.get(service.id)
 		if (existing?.status === "running") return existing
 
-		const port = existing?.port ?? this.allocatePort(service.id)
+		// All services expose on fixed port 3000 under a path with their id
+		const port = 3000
+		const endpointPath = `http://localhost:${port}/${service.id}`
 		const info: ContainerInfo = {
 			serviceId: service.id,
 			status: "starting",
@@ -49,15 +51,17 @@ class ContainerManager {
 			await this.buildAndRunDocker(service, port, info)
 		} else {
 			await new Promise((r) => setTimeout(r, 200))
+			// Standardize endpoint for all services to http://localhost:3000/{id}
 			if (service.type === "roble" && service.tokenDatabase) {
+				// Even when delegating to Roble, expose a local status/endpoint path
 				const res = await robleClient.runService(service, service.tokenDatabase)
 				if (res.jobId) this.robleJobs.set(service.id, res.jobId)
 				info.status = "running"
-				info.endpoint = res.endpoint ?? null
+				info.endpoint = endpointPath
 				info.port = null
 			} else {
 				info.status = "running"
-				info.endpoint = `http://localhost:${port}`
+				info.endpoint = endpointPath
 			}
 		}
 		this.containers.set(service.id, info)

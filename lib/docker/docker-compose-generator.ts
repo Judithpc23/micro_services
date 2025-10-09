@@ -1,7 +1,8 @@
 import type { Microservice } from "@/lib/types/microservice"
 
 export function generateDockerCompose(service: Microservice, port: number): string {
-	const internalPort = service.language === "python" ? 8000 : 3000
+		// Dockerfiles generated set PORT=3000 for both runtimes, so containers listen on 3000
+		const internalPort = 3000
 	const env: Record<string, string> = {
 		SERVICE_NAME: service.name,
 		SERVICE_TYPE: service.type,

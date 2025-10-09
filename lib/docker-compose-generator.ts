@@ -1,4 +1,4 @@
-import type { Microservice } from "@/app/page"
+import type { Microservice } from "@/lib/types/microservice"
 
 export interface DockerComposeConfig {
   version: string
@@ -39,9 +39,9 @@ export function generateDockerCompose(service: Microservice, port: number): stri
         },
         ports: [`${port}:${internalPort}`],
         environment:
-          service.type === "roble" && service.token
+          service.type === "roble" && service.tokenDatabase
             ? {
-                SERVICE_TOKEN: service.token,
+                SERVICE_TOKEN: service.tokenDatabase,
                 SERVICE_TYPE: "roble",
                 SERVICE_NAME: service.name,
               }

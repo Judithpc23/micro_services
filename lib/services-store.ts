@@ -1,4 +1,4 @@
-import type { Microservice } from "@/app/page"
+import type { Microservice } from "@/lib/types/microservice"
 
 class ServicesStore {
   private services: Map<string, Microservice> = new Map()

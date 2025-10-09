@@ -1,4 +1,4 @@
-import type { Microservice } from "@/app/page"
+import type { Microservice } from "@/lib/types/microservice"
 
 export type ContainerStatus = "stopped" | "starting" | "running" | "stopping" | "error"
 
@@ -14,7 +14,8 @@ export interface ContainerInfo {
 
 class ContainerManager {
   private containers: Map<string, ContainerInfo> = new Map()
-  private portCounter = 8080 // Starting port for dynamic allocation
+  // All services map to port 3000 with a unique path per service id
+  private readonly fixedPort = 3000
 
   getContainerInfo(serviceId: string): ContainerInfo | undefined {
     return this.containers.get(serviceId)
@@ -32,9 +33,9 @@ class ContainerManager {
       return existingContainer
     }
 
-    // Allocate a new port
-    const port = this.portCounter++
-    const endpoint = `http://localhost:${port}`
+  // Endpoint format required: http://localhost:3000/{id}
+  const port = this.fixedPort
+  const endpoint = `http://localhost:${port}/${service.id}`
 
     // Update status to starting
     const containerInfo: ContainerInfo = {
@@ -57,11 +58,11 @@ class ContainerManager {
       // Simulate startup delay
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      // Update to running status
-      containerInfo.status = "running"
-      containerInfo.endpoint = endpoint
-      containerInfo.startedAt = new Date()
-      containerInfo.error = null
+  // Update to running status. All services expose on localhost:3000/{id}
+  containerInfo.status = "running"
+  containerInfo.endpoint = endpoint
+  containerInfo.startedAt = new Date()
+  containerInfo.error = null
 
       this.containers.set(service.id, containerInfo)
 

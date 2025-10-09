@@ -4,9 +4,9 @@ import { generateDockerCompose, generateStartScript, generateStopScript } from "
 import { containerManager } from "@/lib/backend/container-manager"
 
 // GET /api/services/[id]/compose - Get Docker Compose configuration
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = await params
+    const { id } = params
     const service = servicesStore.getById(id)
 
     if (!service) {

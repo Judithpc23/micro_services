@@ -1,5 +1,11 @@
 import type { Microservice } from "@/lib/types/microservice"
 
+/**
+ * Genera el Dockerfile según el lenguaje del microservicio.
+ * - Estándar de puerto por defecto: 3000 (ambos runtimes)
+ * - Copia TODO el proyecto (usa .dockerignore)
+ * - Expone ${PORT} y fija HOST=0.0.0.0
+ */
 export function generateDockerfile(service: Microservice): string {
   if (service.language === "python") {
     return generatePythonDockerfile(service)
@@ -9,7 +15,7 @@ export function generateDockerfile(service: Microservice): string {
 }
 
 function generatePythonDockerfile(service: Microservice): string {
-  const hasToken = service.type === "roble" && service.tokenDatabase
+  const hasToken = service.type === "roble" && !!service.tokenDatabase
 
   return `# Dockerfile for ${service.name}
 # Language: Python
@@ -17,30 +23,37 @@ function generatePythonDockerfile(service: Microservice): string {
 
 FROM python:3.11-slim
 
+ENV PYTHONDONTWRITEBYTECODE=1 \\
+    PYTHONUNBUFFERED=1 \\
+    HOST=0.0.0.0 \\
+    PORT=3000 \\
+    SERVICE_NAME="${service.name}" \\
+    SERVICE_TYPE="${service.type}"
+${hasToken ? `ENV ROBLE_TOKEN="${service.tokenDatabase}"` : "# No token required"}
+
 WORKDIR /app
 
-# Install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Dependencias primero para cache estable
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Copy service code
-COPY main.py .
+# Copia TODO el código del servicio (endpoints, módulos, etc.)
+COPY . /app
 
-# Set environment variables
-${hasToken ? `ENV ROBLE_TOKEN="${service.tokenDatabase}"` : "# No token required"}
-ENV SERVICE_NAME="${service.name}"
-ENV SERVICE_TYPE="${service.type}"
+# Salud básica (opcional, Flask responde en /health o /)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \\
+  CMD python -c "import sys,urllib.request as u; u.urlopen('http://127.0.0.1:'+__import__('os').environ.get('PORT','3000')+'/health'); sys.exit(0)" \\
+  || exit 1
 
-# Expose port
-EXPOSE 8000
+EXPOSE \${PORT}
 
-# Run the service
+# Importante: tu main.py debe hacer app.run(host='0.0.0.0', port=int(os.getenv('PORT', '3000')))
 CMD ["python", "main.py"]
 `
 }
 
 function generateJavaScriptDockerfile(service: Microservice): string {
-  const hasToken = service.type === "roble" && service.tokenDatabase
+  const hasToken = service.type === "roble" && !!service.tokenDatabase
 
   return `# Dockerfile for ${service.name}
 # Language: JavaScript (Node.js)
@@ -48,28 +61,38 @@ function generateJavaScriptDockerfile(service: Microservice): string {
 
 FROM node:18-alpine
 
+ENV NODE_ENV=production \\
+    HOST=0.0.0.0 \\
+    PORT=3000 \\
+    SERVICE_NAME="${service.name}" \\
+    SERVICE_TYPE="${service.type}"
+${hasToken ? `ENV ROBLE_TOKEN="${service.tokenDatabase}"` : "# No token required"}
+
 WORKDIR /app
 
-# Install dependencies
-COPY package.json .
-RUN npm install --production
+# Instala dependencias con mejor cache
+COPY package.json package-lock.json* /app/
+RUN npm ci --only=production || npm install --production
 
-# Copy service code
-COPY index.js .
+# Copia TODO el código del servicio
+COPY . /app
 
-# Set environment variables
-${hasToken ? `ENV ROBLE_TOKEN="${service.tokenDatabase}"` : "# No token required"}
-ENV SERVICE_NAME="${service.name}"
-ENV SERVICE_TYPE="${service.type}"
+# Salud básica (Express responde en /health o /)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \\
+  CMD node -e "fetch('http://127.0.0.1:'+ (process.env.PORT||3000) +'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
-# Expose port
-EXPOSE 3000
+EXPOSE \${PORT}
 
-# Run the service
+# Importante: tu index.js debe usar app.listen(process.env.PORT || 3000, '0.0.0.0')
 CMD ["node", "index.js"]
 `
 }
 
+/**
+ * Genera los archivos del servicio (Dockerfile, código y dependencias).
+ * - Requiere que el servicio ya tenga un entrypoint: main.py o index.js
+ * - Requirements/package.json mínimos incluidos para levantar un HTTP básico.
+ */
 export function generateServiceFiles(service: Microservice): {
   dockerfile: string
   code: string
@@ -81,19 +104,26 @@ export function generateServiceFiles(service: Microservice): {
     return {
       dockerfile,
       code: service.code,
+      // Flask + requests mínimos (puedes ampliarlo)
       dependencies: `# requirements.txt
 flask==3.0.0
 requests==2.31.0
 `,
     }
   } else {
+    // Node/Express con script start para buenas prácticas
+    const pkgName = service.name.toLowerCase().replace(/\\s+/g, "-")
     return {
       dockerfile,
       code: service.code,
       dependencies: `{
-  "name": "${service.name.toLowerCase().replace(/\s+/g, "-")}",
+  "name": "${pkgName}",
   "version": "1.0.0",
+  "type": "commonjs",
   "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
     "express": "^4.18.2"
   }

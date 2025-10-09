@@ -4,9 +4,9 @@ import { containerManager } from "@/lib/backend/container-manager"
 
 // POST /api/services/[id]/invoke
 // Body: { token?: string, params?: Record<string, any> }
-export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(_req: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = await params
+    const { id } = params
     const service = servicesStore.getById(id)
     if (!service) {
       return NextResponse.json({ error: "Service not found" }, { status: 404 })

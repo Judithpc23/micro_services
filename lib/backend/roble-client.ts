@@ -144,14 +144,19 @@ export class RobleClient {
     const jobId = `stub-${service.id}-${Date.now()}`
     return {
       jobId,
-      statusUrl: `${this.localBase}/api/services/${service.id}/status`,
-      endpoint: `${this.localBase}/api/services`,
+      // Point status and endpoint to the standardized local service path
+      statusUrl: `${this.localBase}/${service.id}/status`,
+      endpoint: `${this.localBase}/${service.id}`,
     }
   }
 
   private getStatusStub(jobId: string): RobleStatus {
     // Always report running for simplicity; extend as needed.
-    return { jobId, state: "running", endpoint: `${this.localBase}/api/services` }
+    // Try to extract service id from stub jobId format `stub-{serviceId}-{ts}`
+    const parts = jobId.split("-")
+    const serviceId = parts.length >= 3 ? parts.slice(1, parts.length - 1).join("-") : undefined
+    const endpoint = serviceId ? `${this.localBase}/${serviceId}` : `${this.localBase}`
+    return { jobId, state: "running", endpoint }
   }
 }
 
