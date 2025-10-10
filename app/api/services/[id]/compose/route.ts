@@ -6,7 +6,7 @@ import { containerManager } from "@/lib/backend/container-manager"
 // GET /api/services/[id]/compose - Get Docker Compose configuration
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = params
+    const { id } = await params
     const service = servicesStore.getById(id)
 
     if (!service) {

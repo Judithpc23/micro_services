@@ -35,7 +35,7 @@ class ContainerManager {
 
   // Endpoint format required: http://localhost:3000/{id}
   const port = this.fixedPort
-  const endpoint = `http://localhost:${port}/${service.id}`
+  const endpoint = `http://localhost:3000/${service.id}`
 
     // Update status to starting
     const containerInfo: ContainerInfo = {
