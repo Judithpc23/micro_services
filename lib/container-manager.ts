@@ -53,7 +53,7 @@ class ContainerManager {
     // Simulate Docker container startup
     // In production, this would execute actual Docker commands
     try {
-      console.log(`[v0] Starting container for service ${service.name} on port ${port}`)
+      console.log(`Starting container for service ${service.name} on port ${port}`)
 
       // Simulate startup delay
       await new Promise((resolve) => setTimeout(resolve, 2000))
@@ -66,7 +66,7 @@ class ContainerManager {
 
       this.containers.set(service.id, containerInfo)
 
-      console.log(`[v0] Container started successfully: ${endpoint}`)
+      console.log(`Container started successfully: ${endpoint}`)
 
       return containerInfo
     } catch (error) {
@@ -93,7 +93,7 @@ class ContainerManager {
     this.containers.set(serviceId, containerInfo)
 
     try {
-      console.log(`[v0] Stopping container for service ${serviceId}`)
+      console.log(`Stopping container for service ${serviceId}`)
 
       // Simulate shutdown delay
       await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -105,7 +105,7 @@ class ContainerManager {
 
       this.containers.set(serviceId, containerInfo)
 
-      console.log(`[v0] Container stopped successfully`)
+      console.log(`Container stopped successfully`)
 
       return containerInfo
     } catch (error) {

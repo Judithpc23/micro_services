@@ -12,7 +12,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       return NextResponse.json({ error: "Service not found" }, { status: 404 })
     }
 
-    console.log("[v0] Executing service:", service.name)
+    console.log("Executing service:", service.name)
 
     // Start the container
     const containerInfo = await containerManager.startContainer(service)
@@ -27,7 +27,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       startedAt: containerInfo.startedAt,
     })
   } catch (error) {
-    console.error("[v0] Error executing service:", error)
+    console.error("Error executing service:", error)
     return NextResponse.json(
       {
         error: "Failed to execute service",

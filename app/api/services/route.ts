@@ -9,7 +9,7 @@ export async function GET() {
     const services = servicesStore.getAll()
     return NextResponse.json(services)
   } catch (error) {
-    console.error("[v0] Error fetching services:", error)
+    console.error("Error fetching services:", error)
     return NextResponse.json({ error: "Failed to fetch services" }, { status: 500 })
   }
 }
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     const createdService = servicesStore.create(newService)
     return NextResponse.json(createdService, { status: 201 })
   } catch (error) {
-    console.error("[v0] Error creating service:", error)
+    console.error("Error creating service:", error)
     return NextResponse.json({ error: "Failed to create service" }, { status: 500 })
   }
 }

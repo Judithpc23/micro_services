@@ -32,7 +32,7 @@ export default function Home() {
       }))
       setServices(servicesWithDates)
     } catch (error) {
-      console.error("[v0] Error fetching services:", error)
+      console.error("Error fetching services:", error)
       toast({
         title: "Error",
         description: "Failed to load services",
@@ -63,7 +63,7 @@ export default function Home() {
         description: `Service "${newService.name}" created successfully`,
       })
     } catch (error) {
-      console.error("[v0] Error creating service:", error)
+      console.error("Error creating service:", error)
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to create service",
@@ -95,7 +95,7 @@ export default function Home() {
         description: `Service "${updatedService.name}" updated successfully`,
       })
     } catch (error) {
-      console.error("[v0] Error updating service:", error)
+      console.error("Error updating service:", error)
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to update service",
@@ -121,7 +121,7 @@ export default function Home() {
         description: "Service deleted successfully",
       })
     } catch (error) {
-      console.error("[v0] Error deleting service:", error)
+      console.error("Error deleting service:", error)
       toast({
         title: "Error",
         description: "Failed to delete service",
@@ -156,7 +156,7 @@ export default function Home() {
       toast({ title: "Execution Started", description: json?.message || "Service is running" })
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to execute service"
-      console.error("[v0] Error executing service:", error)
+      console.error("Error executing service:", error)
       toast({ title: "Error", description: message, variant: "destructive" })
     }
   }

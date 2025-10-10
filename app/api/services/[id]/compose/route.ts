@@ -28,7 +28,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
       port,
     })
   } catch (error) {
-    console.error("[v0] Error generating Docker Compose:", error)
+    console.error("Error generating Docker Compose:", error)
     return NextResponse.json({ error: "Failed to generate Docker Compose configuration" }, { status: 500 })
   }
 }

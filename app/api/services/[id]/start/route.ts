@@ -21,7 +21,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       container: containerInfo,
     })
   } catch (error) {
-    console.error("[v0] Error starting service:", error)
+    console.error("Error starting service:", error)
     return NextResponse.json(
       {
         error: "Failed to start service",

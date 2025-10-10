@@ -28,7 +28,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
       },
     })
   } catch (error) {
-    console.error("[v0] Error getting service status:", error)
+    console.error("Error getting service status:", error)
     return NextResponse.json({ error: "Failed to get service status" }, { status: 500 })
   }
 }
