@@ -5,7 +5,7 @@ import { containerManager } from "@/lib/backend/container-manager"
 // GET /api/services/[id]/status - Get service container status
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = params
+    const { id } = await params
     const service = servicesStore.getById(id)
 
     if (!service) {

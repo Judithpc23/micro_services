@@ -5,7 +5,7 @@ import { validateServiceCode } from "@/lib/backend/code-validator"
 // GET /api/services/[id] - Get a single service
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = params
+    const { id } = await params
     const service = servicesStore.getById(id)
 
     if (!service) {
@@ -22,7 +22,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 // PUT /api/services/[id] - Update a service
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
   const { name, description, language, code, type, tokenDatabase } = body
 
@@ -92,7 +92,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 // DELETE /api/services/[id] - Delete a service
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = params
+    const { id } = await params
     const deleted = servicesStore.delete(id)
 
     if (!deleted) {

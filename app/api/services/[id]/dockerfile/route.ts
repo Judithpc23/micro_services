@@ -4,7 +4,7 @@ import { generateServiceFiles } from "@/lib/docker/dockerfile-generator"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = params
+    const { id } = await params
     const service = servicesStore.getById(id)
 
     if (!service) {

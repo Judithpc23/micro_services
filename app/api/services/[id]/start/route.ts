@@ -5,7 +5,7 @@ import { containerManager } from "@/lib/backend/container-manager"
 // POST /api/services/[id]/start - Start a service container
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = params
+    const { id } = await params
     const service = servicesStore.getById(id)
 
     if (!service) {
