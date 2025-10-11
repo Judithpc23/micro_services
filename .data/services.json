@@ -70,5 +70,32 @@
     "code": "def sumar():\n    a = request.args.get('a', default=0, type=int)\n    b = request.args.get('b', default=0, type=int)\n\n    resultado = a + b\n    return f\"La suma de {a} y {b} es: {resultado}\"",
     "type": "execution",
     "createdAt": "2025-10-11T05:20:57.972Z"
+  },
+  {
+    "id": "89a8462c-6681-4346-883d-4e45bdd019ff",
+    "name": "jud",
+    "description": "---",
+    "language": "python",
+    "code": "def sumar():\n    # Obtener parámetros desde la URL: /sumar?a=10&b=20\n    a = request.args.get('a', default=0, type=int)\n    b = request.args.get('b', default=0, type=int)\n    \n    resultado = a + b\n    return f\"La suma de {a} y {b} es: {resultado}\"",
+    "type": "execution",
+    "createdAt": "2025-10-11T06:21:46.413Z"
+  },
+  {
+    "id": "test-sync-1760217941750",
+    "name": "Test Sync Service",
+    "description": "Servicio de prueba para sincronización",
+    "language": "python",
+    "code": "def handler():\n    return {\"message\": \"Hello from test service\"}",
+    "type": "execution",
+    "createdAt": "2025-10-11T21:25:41.750Z"
+  },
+  {
+    "id": "a93fcf81-bf2b-4497-9888-3ba312eca957",
+    "name": "Test Sync Service",
+    "description": "Servicio de prueba para sincronización",
+    "language": "python",
+    "code": "def handler():\n    return {\"message\": \"Hello from test service\"}",
+    "type": "execution",
+    "createdAt": "2025-10-11T21:37:08.239Z"
   }
 ]

@@ -1,4 +1,8 @@
 import type { Microservice } from "@/lib/types/microservice"
+import { RobleAuthService, RobleAuthResult } from './roble-logic/roble-auth'
+import { RobleDatabaseService, RobleQueryResult, RobleInsertResult } from './roble-logic/roble-database'
+import { getRobleConfig } from './roble-logic/roble-config'
+import { robleAuthInitializer } from './roble-logic/roble-auth-init'
 
 export interface RobleRunResult {
   jobId: string
@@ -45,6 +49,48 @@ export class RobleClient {
   private remoteEnabled = process.env.ENABLE_ROBLE_REMOTE === "true"
   // Local base used for stub endpoints / status references.
   private localBase = process.env.ROBLE_LOCAL_BASE_URL || "http://localhost:3000"
+  
+  // Services for authentication and database operations
+  private authService: RobleAuthService
+  private databaseService: RobleDatabaseService
+  
+  constructor() {
+    const config = getRobleConfig()
+    this.authService = new RobleAuthService(config)
+    this.databaseService = new RobleDatabaseService({
+      ...config,
+      authService: this.authService
+    })
+    
+    // Inicializar autenticación automáticamente (síncrono)
+    this.initializeAuthSync()
+  }
+  
+  /**
+   * Inicializar autenticación con Roble (síncrono)
+   */
+  private initializeAuthSync(): void {
+    try {
+      console.log('🔐 Iniciando autenticación con Roble...')
+      
+      // Cargar credenciales desde variables de entorno
+      robleAuthInitializer.loadCredentialsFromEnv()
+      
+      // Intentar autenticación inicial de forma asíncrona
+      robleAuthInitializer.initializeAuth().then(authSuccess => {
+        if (authSuccess) {
+          console.log('✅ Autenticación Roble inicializada correctamente')
+        } else {
+          console.warn('⚠️ No se pudo inicializar autenticación Roble - operaciones pueden fallar')
+        }
+      }).catch(error => {
+        console.warn('⚠️ Error inicializando autenticación Roble:', error)
+      })
+      
+    } catch (error) {
+      console.warn('⚠️ Error configurando autenticación Roble:', error)
+    }
+  }
 
   // Public API
   async runService(service: Microservice, token: string): Promise<RobleRunResult> {
@@ -157,6 +203,94 @@ export class RobleClient {
     const serviceId = parts.length >= 3 ? parts.slice(1, parts.length - 1).join("-") : undefined
     const endpoint = serviceId ? `${this.localBase}/${serviceId}` : `${this.localBase}`
     return { jobId, state: "running", endpoint }
+  }
+
+  // ===== AUTHENTICATION METHODS =====
+  
+  /**
+   * Iniciar sesión
+   */
+  async login(email: string, password: string): Promise<RobleAuthResult> {
+    return this.authService.login(email, password)
+  }
+  
+  /**
+   * Registrar usuario
+   */
+  async signup(email: string, password: string, name: string): Promise<RobleAuthResult> {
+    return this.authService.signup(email, password, name)
+  }
+  
+  /**
+   * Renovar token
+   */
+  async refresh(): Promise<RobleAuthResult> {
+    return this.authService.refresh()
+  }
+  
+  /**
+   * Cerrar sesión
+   */
+  async logout(): Promise<boolean> {
+    return this.authService.logout()
+  }
+  
+  /**
+   * Verificar token
+   */
+  async verifyToken(): Promise<boolean> {
+    return this.authService.verifyToken()
+  }
+  
+  /**
+   * Verificar si está autenticado
+   */
+  isAuthenticated(): boolean {
+    return this.authService.isAuthenticated()
+  }
+  
+  // ===== DATABASE METHODS =====
+  
+  /**
+   * Leer registros de una tabla
+   */
+  async readRecords(tableName: string, filters: Record<string, any> = {}): Promise<RobleQueryResult> {
+    return this.databaseService.readRecords(tableName, filters)
+  }
+  
+  /**
+   * Insertar registros en una tabla
+   */
+  async insertRecords(tableName: string, records: any[]): Promise<RobleInsertResult> {
+    return this.databaseService.insertRecords(tableName, records)
+  }
+  
+  /**
+   * Actualizar un registro
+   */
+  async updateRecord(tableName: string, id: string, updates: Record<string, any>): Promise<RobleQueryResult> {
+    return this.databaseService.updateRecord(tableName, id, updates)
+  }
+  
+  /**
+   * Eliminar un registro
+   */
+  async deleteRecord(tableName: string, id: string): Promise<RobleQueryResult> {
+    return this.databaseService.deleteRecord(tableName, id)
+  }
+  
+  /**
+   * Crear una tabla
+   */
+  async createTable(tableName: string, columns: any[]): Promise<RobleQueryResult> {
+    return this.databaseService.createTable(tableName, columns)
+  }
+  
+  /**
+   * Obtener datos de una tabla
+   */
+  async getTableData(tableName: string, schema: string = 'public'): Promise<RobleQueryResult> {
+    return this.databaseService.getTableData(tableName, schema)
   }
 }
 
