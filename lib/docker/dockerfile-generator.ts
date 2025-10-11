@@ -101,9 +101,11 @@ export function generateServiceFiles(service: Microservice): {
 	const dockerfile = generateDockerfile(service)
 
 	if (service.language === "python") {
+		// Generar código de servidor Flask automáticamente
+		const flaskCode = generateFlaskServer(service)
 		return {
 			dockerfile,
-			code: service.code,
+			code: flaskCode,
 			// Flask + requests mínimos (puedes ampliarlo)
 			dependencies: `# requirements.txt
 flask==3.0.0
@@ -111,11 +113,12 @@ requests==2.31.0
 `,
 		}
 	} else {
-		// Node/Express con script start para buenas prácticas
+		// Generar código de servidor Express automáticamente
+		const expressCode = generateExpressServer(service)
 		const pkgName = service.name.toLowerCase().replace(/\s+/g, "-")
 		return {
 			dockerfile,
-			code: service.code,
+			code: expressCode,
 			dependencies: `{
 	"name": "${pkgName}",
 	"version": "1.0.0",
@@ -131,4 +134,115 @@ requests==2.31.0
 `,
 		}
 	}
+}
+
+/**
+ * Genera código de servidor Flask automáticamente
+ */
+function generateFlaskServer(service: Microservice): string {
+	return `from flask import Flask, request, jsonify
+import os
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return jsonify({
+        "message": "Service ready",
+        "serviceId": "${service.id}",
+        "endpoint": f"http://localhost:3000/${service.id}",
+        "status": "running"
+    })
+
+@app.route('/health')
+def health():
+    return jsonify({"status": "healthy"})
+
+@app.route('/execute', methods=['POST'])
+def execute():
+    try:
+        # Obtener parámetros del request
+        params = request.get_json() or {}
+        
+        # Ejecutar el código personalizado del usuario
+        ${service.code.replace(/\n/g, '\n        ')}
+        
+        # Si el código define una función, ejecutarla automáticamente
+        result = "Execution completed"
+        
+        # Buscar funciones definidas y ejecutarlas
+        local_vars = locals()
+        for name, obj in local_vars.items():
+            if callable(obj) and not name.startswith('_') and name != 'execute':
+                try:
+                    result = obj()
+                    break  # Ejecutar solo la primera función encontrada
+                except Exception as func_error:
+                    result = f"Error ejecutando función {name}: {str(func_error)}"
+                    break
+        
+        return jsonify({
+            "success": True,
+            "result": result,
+            "params": params
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+if __name__ == '__main__':
+    port = int(os.getenv('PORT', 3000))
+    app.run(host='0.0.0.0', port=port, debug=False)
+`
+}
+
+/**
+ * Genera código de servidor Express automáticamente
+ */
+function generateExpressServer(service: Microservice): string {
+	return `const express = require('express');
+const app = express();
+
+app.use(express.json());
+
+app.get('/', (req, res) => {
+    res.json({
+        message: "Service ready",
+        serviceId: "${service.id}",
+        endpoint: \`http://localhost:3000/${service.id}\`,
+        status: "running"
+    });
+});
+
+app.get('/health', (req, res) => {
+    res.json({ status: "healthy" });
+});
+
+app.post('/execute', (req, res) => {
+    try {
+        const params = req.body || {};
+        
+        // Aquí va tu código personalizado:
+        ${service.code.replace(/\n/g, '\n        ')}
+        
+        res.json({
+            success: true,
+            result: "Execution completed",
+            params: params
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+const port = process.env.PORT || 3000;
+app.listen(port, '0.0.0.0', () => {
+    console.log(\`Server running on port \${port}\`);
+});
+`
 }

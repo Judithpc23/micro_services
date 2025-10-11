@@ -1,119 +1,20 @@
 [
   {
-    "id": "45ff483b-2736-4289-8d21-2faac1774054",
-    "name": "hola",
-    "description": "blanlanna",
+    "id": "60e7372b-094e-479d-94bf-a8d597c98728",
+    "name": "Prueba con parametros",
+    "description": "----",
     "language": "python",
-    "code": "print(\"Hello World\")",
+    "code": "def sumar():\n# Obtener parámetros desde la URL: /sumar?a=10&b=20\na = int(request.args.get('a', 0))\nb = int(request.args.get('b', 0))\nresultado = a + b\nreturn f\"La suma de {a} y {b} es: {resultado}\"",
     "type": "execution",
-    "createdAt": "2025-10-09T19:32:42.487Z"
+    "createdAt": "2025-10-11T00:59:47.301Z"
   },
   {
-    "id": "0f810039-6009-47b6-bcea-198d8eaa08b7",
-    "name": "hola",
-    "description": "hjklñ",
-    "language": "javascript",
-    "code": "console.log(\"hola\");",
-    "type": "execution",
-    "createdAt": "2025-10-09T19:38:06.967Z"
-  },
-  {
-    "id": "b99dad20-adeb-4b9f-9e48-40f0edd322f9",
-    "name": "hola",
-    "description": "blablabla",
+    "id": "10252366-827e-4794-b8c8-3597c37e8092",
+    "name": "jud",
+    "description": "prueba simple",
     "language": "python",
-    "code": "print(\"Hello World\")",
+    "code": "def print():\n   return print(\"Hello\")",
     "type": "execution",
-    "createdAt": "2025-10-09T20:10:29.843Z"
-  },
-  {
-    "id": "3b02d533-fc29-406f-aa81-ad1170284302",
-    "name": "hgfjdksl",
-    "description": "hjklcñx",
-    "language": "javascript",
-    "code": "console.log(\"hola\");",
-    "type": "execution",
-    "createdAt": "2025-10-09T20:11:58.294Z"
-  },
-  {
-    "id": "9c64e5fd-e3e0-4c7d-a483-c824089bf813",
-    "name": "hola",
-    "description": "blablabla",
-    "language": "python",
-    "code": "print(\"Hello World\")",
-    "type": "execution",
-    "createdAt": "2025-10-09T21:22:15.731Z"
-  },
-  {
-    "id": "46a2cbc6-bd76-4a57-9311-986bac5538e5",
-    "name": "hola",
-    "description": "hjklñ",
-    "language": "python",
-    "code": "print(\"Hello World\")",
-    "type": "execution",
-    "createdAt": "2025-10-09T21:34:17.831Z"
-  },
-  {
-    "id": "13fb6b87-1491-4233-b2c3-bbc01b4e3b6d",
-    "name": "hola",
-    "description": "hm,vckm",
-    "language": "python",
-    "code": "print(\"hello world\")",
-    "type": "execution",
-    "createdAt": "2025-10-09T21:47:06.369Z"
-  },
-  {
-    "id": "612efb25-3ddf-483b-9aba-2a8dbb774fa4",
-    "name": "hola",
-    "description": "fghjkl",
-    "language": "python",
-    "code": "print(\"hello\")",
-    "type": "execution",
-    "createdAt": "2025-10-10T04:19:14.779Z"
-  },
-  {
-    "id": "a99a2194-08bc-45b9-bb88-87b269f0e146",
-    "name": "mundo",
-    "description": "ghdjkso",
-    "language": "python",
-    "code": "print(\"hello\")",
-    "type": "execution",
-    "createdAt": "2025-10-10T04:24:02.342Z"
-  },
-  {
-    "id": "e1aa9dd9-570e-4a1d-9505-a9f25f5cf6b9",
-    "name": "otravez",
-    "description": "hfjdkz",
-    "language": "python",
-    "code": "print(\"hola\")",
-    "type": "execution",
-    "createdAt": "2025-10-10T04:52:27.816Z"
-  },
-  {
-    "id": "37b05a95-2fe5-4ace-86fc-780598133762",
-    "name": "nuevo",
-    "description": "hfdjsk",
-    "language": "python",
-    "code": "print(\"nuevo\")",
-    "type": "execution",
-    "createdAt": "2025-10-10T05:06:01.514Z"
-  },
-  {
-    "id": "4f2e4e2c-dce1-43ae-a70d-ba54d56fb4e1",
-    "name": "hola",
-    "description": "wdfg",
-    "language": "python",
-    "code": "print(\"hello\")",
-    "type": "execution",
-    "createdAt": "2025-10-10T06:58:45.248Z"
-  },
-  {
-    "id": "2a7f2d73-45c0-487b-8739-d73ccfadb7fc",
-    "name": "hoy",
-    "description": "jajajajaj",
-    "language": "python",
-    "code": "print(\"hoy\")",
-    "type": "execution",
-    "createdAt": "2025-10-10T17:29:36.735Z"
+    "createdAt": "2025-10-11T01:05:20.904Z"
   }
 ]

@@ -54,3 +54,42 @@ function convertToYAML(obj: any, indent = 0): string {
 	}
 	return yaml
 }
+
+export function generateGlobalDockerCompose(services: Microservice[]): string {
+	const compose = {
+		version: "3.8",
+		services: {},
+		networks: { "microservices-network": { driver: "bridge" } },
+	}
+
+	services.forEach(service => {
+		const port = allocatePort(service.id)
+		const env: Record<string, string> = {
+			SERVICE_NAME: service.name,
+			SERVICE_TYPE: service.type,
+		}
+		if (service.type === "roble" && service.tokenDatabase) {
+			env["SERVICE_TOKEN"] = service.tokenDatabase
+		}
+
+		compose.services[service.id] = {
+			container_name: `microservice-${service.id}`,
+			build: { context: ".", dockerfile: `Dockerfile.${service.id}` },
+			ports: [`${port}:3000`],
+			environment: env,
+			restart: "unless-stopped",
+			networks: ["microservices-network"],
+		}
+	})
+
+	return convertToYAML(compose)
+}
+
+function allocatePort(serviceId: string): number {
+	const basePort = 45000
+	let hash = 0
+	for (let i = 0; i < serviceId.length; i++) {
+		hash = (hash * 31 + serviceId.charCodeAt(i)) >>> 0
+	}
+	return basePort + (hash % 1000)
+}

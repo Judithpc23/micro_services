@@ -22,12 +22,168 @@ class ContainerManager {
 	private basePort = Number(process.env.SERVICE_BASE_PORT || 45000)
 	private robleJobs = new Map<string, string>() // serviceId -> jobId
 	private enableDocker = process.env.ENABLE_DOCKER_RUNTIME === "true"
+	private containerIntervals = new Map<string, NodeJS.Timeout>() // serviceId -> interval
+	
+	constructor() {
+		console.log("🔧 ContainerManager Debug:", {
+			ENABLE_DOCKER_RUNTIME: process.env.ENABLE_DOCKER_RUNTIME,
+			enableDocker: this.enableDocker,
+			basePort: this.basePort,
+			networkName: this.networkName
+		})
+		this.log.info("ContainerManager initialized", { 
+			enableDocker: this.enableDocker, 
+			basePort: this.basePort,
+			networkName: this.networkName 
+		})
+		
+		// Initialize Docker connection and sync existing containers
+		if (this.enableDocker) {
+			this.initializeDockerConnection()
+		}
+	}
+
+	private async initializeDockerConnection() {
+		try {
+			const dockerMod = await import("dockerode")
+			const Docker = dockerMod.default ?? dockerMod
+			this.docker = new Docker()
+			
+			// Sync all existing containers
+			await this.syncAllContainers()
+		} catch (err) {
+			this.log.error("Failed to initialize Docker connection", { err })
+		}
+	}
+
+	private async syncAllContainers() {
+		if (!this.docker) return
+
+		try {
+			const containers = await this.docker.listContainers({ all: false })
+			const microserviceContainers = containers.filter((c: any) => 
+				c.Names.some((name: string) => name.includes('microservice-'))
+			)
+
+			for (const container of microserviceContainers) {
+				const serviceId = container.Names[0].replace('/microservice-', '')
+				const port = container.Ports[0]?.PublicPort || this.allocatePort(serviceId)
+				
+				const info: ContainerInfo = {
+					serviceId,
+					status: "running",
+					endpoint: `http://localhost:3000/${serviceId}`,
+					port,
+					startedAt: new Date(container.Created * 1000).toISOString(),
+					stoppedAt: null,
+					error: null,
+				}
+				
+				this.containers.set(serviceId, info)
+				this.log.info("Synced existing container", { serviceId, status: "running" })
+			}
+		} catch (err) {
+			this.log.error("Failed to sync containers", { err })
+		}
+	}
 	  private networkName = process.env.DOCKER_NETWORK_NAME || "microservices_net"
 	  	private docker: any = null // initialized lazily to avoid bundler issues
 	private log = createLogger("container-manager")
 
 	getContainerInfo(serviceId: string): ContainerInfo | undefined {
+		// Return current state without async sync to avoid blocking
 		return this.containers.get(serviceId)
+	}
+
+	async forceSyncAllContainers(): Promise<void> {
+		console.log("🔄 Force sync started", { enableDocker: this.enableDocker, hasDocker: !!this.docker })
+		
+		if (!this.enableDocker) {
+			console.log("❌ Docker not enabled")
+			return
+		}
+		
+		if (!this.docker) {
+			console.log("❌ Docker not initialized, trying to initialize...")
+			try {
+				const dockerMod = await import("dockerode")
+				const Docker = dockerMod.default ?? dockerMod
+				this.docker = new Docker()
+				console.log("✅ Docker initialized")
+			} catch (err) {
+				console.log("❌ Failed to initialize Docker", err)
+				return
+			}
+		}
+
+		try {
+			console.log("🔍 Listing containers...")
+			const containers = await this.docker.listContainers({ all: false })
+			console.log("📦 Found containers:", containers.length)
+			
+			const microserviceContainers = containers.filter((c: any) => 
+				c.Names.some((name: string) => name.includes('microservice-'))
+			)
+			console.log("🎯 Microservice containers:", microserviceContainers.length)
+
+			// Clear existing container info
+			this.containers.clear()
+			console.log("🧹 Cleared existing container info")
+
+			for (const container of microserviceContainers) {
+				const serviceId = container.Names[0].replace('/microservice-', '')
+				const port = container.Ports[0]?.PublicPort || this.allocatePort(serviceId)
+				
+				const info: ContainerInfo = {
+					serviceId,
+					status: "running",
+					endpoint: `http://localhost:3000/${serviceId}`,
+					port,
+					startedAt: new Date(container.Created * 1000).toISOString(),
+					stoppedAt: null,
+					error: null,
+				}
+				
+				this.containers.set(serviceId, info)
+				console.log("✅ Synced container", { serviceId, status: "running", port })
+			}
+			
+			console.log("🎉 Force sync completed", { syncedCount: microserviceContainers.length })
+		} catch (err) {
+			console.log("❌ Failed to force sync containers", err)
+			this.log.error("Failed to force sync containers", { err })
+		}
+	}
+
+	private async syncWithDockerState(serviceId: string) {
+		if (!this.enableDocker || !this.docker) return
+
+		try {
+			const containerName = `microservice-${serviceId}`
+			const container = this.docker.getContainer(containerName)
+			const containerInfo = await container.inspect()
+			
+			const existing = this.containers.get(serviceId)
+			if (existing) {
+				// Update status based on actual Docker state
+				if (containerInfo.State.Status === "running") {
+					existing.status = "running"
+					existing.endpoint = `http://localhost:3000/${serviceId}`
+				} else if (containerInfo.State.Status === "exited") {
+					existing.status = "stopped"
+					existing.endpoint = null
+				}
+				this.containers.set(serviceId, existing)
+			}
+		} catch (err) {
+			// Container doesn't exist, mark as stopped
+			const existing = this.containers.get(serviceId)
+			if (existing) {
+				existing.status = "stopped"
+				existing.endpoint = null
+				this.containers.set(serviceId, existing)
+			}
+		}
 	}
 
 	async startContainer(service: Microservice): Promise<ContainerInfo> {
@@ -51,9 +207,17 @@ class ContainerManager {
 		this.containers.set(service.id, info)
 
 		// Simulate or real startup
+		this.log.info("Starting container", { 
+			serviceId: service.id, 
+			enableDocker: this.enableDocker,
+			port 
+		})
+		
 		if (this.enableDocker) {
+			this.log.info("Using Docker runtime")
 			await this.buildAndRunDocker(service, port, info)
 		} else {
+			this.log.info("Using simulated runtime")
 			await new Promise((r) => setTimeout(r, 200))
 			// Standardize endpoint for all services to http://localhost:3000/{id}
 			if (service.type === "roble" && service.tokenDatabase) {
@@ -169,14 +333,18 @@ class ContainerManager {
 					PortBindings: { "3000/tcp": [{ HostPort: `${port}` }] },
 					NetworkMode: this.networkName,
 					Binds: binds,
+					RestartPolicy: { Name: "unless-stopped" }, // Keep container running unless manually stopped
 				},
 				NetworkingConfig: {},
 			})
 
 			await created.start()
 
+			// Monitor container status and restart if it exits unexpectedly
+			this.monitorContainer(service.id, created)
+
 			info.status = "running"
-			info.endpoint = `http://localhost:3000`
+			info.endpoint = `http://localhost:3000/${service.id}`
 		} catch (err: any) {
 			this.log.error("docker build/run failed", { err: err?.message || err, serviceId: service.id })
 			info.status = "error"
@@ -184,9 +352,47 @@ class ContainerManager {
 		}
 	}
 
+	private async monitorContainer(serviceId: string, container: any) {
+		// Monitor container status every 5 seconds
+		const checkStatus = async () => {
+			try {
+				const containerInfo = await container.inspect()
+				if (containerInfo.State.Status === "exited") {
+					this.log.info("Container exited, restarting", { serviceId })
+					await container.start()
+				}
+			} catch (err: any) {
+				// If container doesn't exist (404), stop monitoring
+				if (err.statusCode === 404) {
+					this.log.info("Container no longer exists, stopping monitoring", { serviceId })
+					const interval = this.containerIntervals.get(serviceId)
+					if (interval) {
+						clearInterval(interval)
+						this.containerIntervals.delete(serviceId)
+					}
+					return
+				}
+				this.log.error("Container monitoring error", { serviceId, err })
+			}
+		}
+
+		// Check every 5 seconds
+		const interval = setInterval(checkStatus, 5000)
+		
+		// Store interval ID for cleanup
+		this.containerIntervals.set(serviceId, interval)
+	}
+
 	private async stopDockerContainer(serviceId: string) {
 		this.log.info("[docker] stop", { serviceId })
 		try {
+			// Clear monitoring interval
+			const interval = this.containerIntervals.get(serviceId)
+			if (interval) {
+				clearInterval(interval)
+				this.containerIntervals.delete(serviceId)
+			}
+
 			const containerName = `microservice-${serviceId}`
 			const container = this.docker.getContainer(containerName)
 			await container.stop().catch(() => {})

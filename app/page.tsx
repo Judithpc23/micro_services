@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { CreateServiceForm } from "@/components/create-service-form"
 import { ServiceCard } from "@/components/service-card"
+import { BulkControls } from "@/components/bulk-controls"
 import { Code2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import type { Microservice } from "@/lib/types/microservice"
@@ -200,6 +201,9 @@ export default function Home() {
                   : `${services.length} ${services.length === 1 ? "service" : "services"} deployed`}
               </p>
             </div>
+
+            {/* Bulk Controls */}
+            {services.length > 0 && <BulkControls />}
 
             {loading ? (
               <div className="flex items-center justify-center rounded-lg border border-border bg-card/30 p-12">
