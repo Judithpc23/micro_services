@@ -16,5 +16,59 @@
     "code": "def print():\n   return print(\"Hello\")",
     "type": "execution",
     "createdAt": "2025-10-11T01:05:20.904Z"
+  },
+  {
+    "id": "e551dca8-f22c-4b70-a945-c778688525ed",
+    "name": "holaaaa",
+    "description": "hfjdks",
+    "language": "python",
+    "code": "def hola():\n     return \"Hola Mundo\"",
+    "type": "execution",
+    "createdAt": "2025-10-11T04:08:14.930Z"
+  },
+  {
+    "id": "e7713add-ca8f-450f-b308-37b0f5290fae",
+    "name": "suma",
+    "description": "sumar",
+    "language": "python",
+    "code": "def sumar():\n     a = request.args.get('a', default=0, type=int)\n\n     b = request.args.get('b', default=0, type=int)\n\n     resultado = a + b\n\n     return f\"La suma de {a} y {b} es: {resultado}\"",
+    "type": "execution",
+    "createdAt": "2025-10-11T04:41:07.886Z"
+  },
+  {
+    "id": "21db9e7e-dd30-4f6c-b22e-b9e8232d08af",
+    "name": "suma",
+    "description": "sumar",
+    "language": "python",
+    "code": "def sumar():\n    a = request.args.get('a', default=0, type=int)\n    b = request.args.get('b', default=0, type=int)\n\n    resultado = a + b\n    return f\"La suma de {a} y {b} es: {resultado}\"",
+    "type": "execution",
+    "createdAt": "2025-10-11T05:01:35.314Z"
+  },
+  {
+    "id": "ace62488-fe08-4c32-a4b5-1f0532847bda",
+    "name": "sumarfas",
+    "description": "dsadasd",
+    "language": "python",
+    "code": "def sumar():\n    # Obtener parámetros desde la URL: /sumar?a=10&b=20\n    a = request.args.get('a', default=0, type=int)\n    b = request.args.get('b', default=0, type=int)\n\n    resultado = a + b\n    return f\"La suma de {a} y {b} es: {resultado}\"",
+    "type": "execution",
+    "createdAt": "2025-10-11T05:08:17.150Z"
+  },
+  {
+    "id": "c7374b39-6e2a-45eb-92c3-41f716791553",
+    "name": "dsadsad",
+    "description": "dsadasdas",
+    "language": "python",
+    "code": "def sumar():\n    a = request.args.get('a', default=0, type=int)\n    b = request.args.get('b', default=0, type=int)\n\n    resultado = a + b\n    return f\"La suma de {a} y {b} es: {resultado}\"",
+    "type": "execution",
+    "createdAt": "2025-10-11T05:14:31.574Z"
+  },
+  {
+    "id": "17d50a85-6e3b-46a5-ae5c-e2c66bf0a13b",
+    "name": "adad",
+    "description": "dadsdasd",
+    "language": "python",
+    "code": "def sumar():\n    a = request.args.get('a', default=0, type=int)\n    b = request.args.get('b', default=0, type=int)\n\n    resultado = a + b\n    return f\"La suma de {a} y {b} es: {resultado}\"",
+    "type": "execution",
+    "createdAt": "2025-10-11T05:20:57.972Z"
   }
 ]

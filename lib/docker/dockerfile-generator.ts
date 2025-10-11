@@ -158,12 +158,17 @@ def home():
 def health():
     return jsonify({"status": "healthy"})
 
-@app.route('/execute', methods=['POST'])
+@app.route('/execute', methods=['GET', 'POST'])
 def execute():
     try:
-        # Obtener parámetros del request
-        params = request.get_json() or {}
-        
+        params = {}
+        if request.method == 'POST':
+            params.update(request.get_json() or {})
+        params.update(request.args.to_dict())
+    
+        for key, value in params.items():
+            locals()[key] = value
+
         # Ejecutar el código personalizado del usuario
         ${service.code.replace(/\n/g, '\n        ')}
         
@@ -220,9 +225,14 @@ app.get('/health', (req, res) => {
     res.json({ status: "healthy" });
 });
 
-app.post('/execute', (req, res) => {
+app.all('/execute', (req, res) => {
     try {
-        const params = req.body || {};
+        const params = { ...req.body, ...req.query };
+
+        // Make parameters available as local variables
+        Object.keys(params).forEach(key => {
+            eval(key + " = params['" + key + "']");
+        });
         
         // Aquí va tu código personalizado:
         ${service.code.replace(/\n/g, '\n        ')}

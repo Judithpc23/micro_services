@@ -3,9 +3,12 @@ import { servicesStore } from "@/lib/backend/services-store"
 import { containerManager } from "@/lib/backend/container-manager"
 
 // GET /[id] - Proxy endpoint for microservices
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest, 
+  { params }: { params: { id: string; path?: string[] } }
+) {
   try {
-    const { id } = await params
+    const { id, path } = await params
     const service = servicesStore.getById(id)
 
     if (!service) {
@@ -21,23 +24,17 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       }, { status: 503 })
     }
 
-    // Get the internal port from container info
     const internalPort = containerInfo.port
     if (!internalPort) {
       return NextResponse.json({ error: "Service port not available" }, { status: 503 })
     }
 
-    // Forward request to the actual container
+    // Build target path from the path segments
+    const targetPath = path && path.length > 0 ? `/${path.join('/')}` : '/execute'
+    
     const url = new URL(request.url)
-    let targetPath = url.pathname.replace(`/${id}`, '') || '/'
-    
-    // If accessing root path, redirect to /execute to run the custom code
-    if (targetPath === '/') {
-      targetPath = '/execute'
-    }
-    
-    const targetUrl = `http://localhost:${internalPort}${targetPath}`
-    
+    const targetUrl = `http://localhost:${internalPort}${targetPath}${url.search}`
+        
     console.log(`Proxying request to: ${targetUrl}`)
     
     try {
