@@ -6,7 +6,7 @@ import { validateServiceCode } from "@/lib/backend/code-validator"
 // GET /api/services - Get all services
 export async function GET() {
   try {
-    const services = servicesStore.getAll()
+    const services = await servicesStore.getAll()
     return NextResponse.json(services)
   } catch (error) {
     console.error("Error fetching services:", error)
