@@ -4,7 +4,7 @@ import { containerManager } from "@/lib/backend/container-manager"
 
 export async function POST(request: NextRequest) {
   try {
-    const services = servicesStore.getAll()
+    const services = await servicesStore.getAll()
     
     if (services.length === 0) {
       return NextResponse.json({ 
