@@ -97,5 +97,59 @@
     "code": "def handler():\n    return {\"message\": \"Hello from test service\"}",
     "type": "execution",
     "createdAt": "2025-10-11T21:37:08.239Z"
+  },
+  {
+    "id": "b1280543-4609-4eb6-a808-ea39c413e08b",
+    "name": "Test Roble Sync",
+    "description": "Servicio de prueba para sincronización con Roble",
+    "language": "python",
+    "code": "def handler():\n    return {'message': 'Hello from Roble sync test'}",
+    "type": "execution",
+    "createdAt": "2025-10-12T20:59:58.941Z"
+  },
+  {
+    "id": "bb294ada-4efc-469e-ba89-fb67387a5d59",
+    "name": "Test Final Roble Sync",
+    "description": "Servicio de prueba final para verificar sincronización",
+    "language": "python",
+    "code": "def handler():\n    return {'message': 'Hello from final test', 'timestamp': '2025-10-12'}",
+    "type": "execution",
+    "createdAt": "2025-10-12T21:44:15.286Z"
+  },
+  {
+    "id": "e8c59c28-960a-401f-80d2-5b4f685728c5",
+    "name": "Test Fixed ID Sync",
+    "description": "Servicio con ID corregido para Roble",
+    "language": "python",
+    "code": "def handler():\n    return {'message': 'Hello from fixed ID test'}",
+    "type": "execution",
+    "createdAt": "2025-10-12T21:48:06.369Z"
+  },
+  {
+    "id": "c9258714-9d76-49a5-b699-a49fb4c23d43",
+    "name": "Test Roble Insertion 1760305899706",
+    "description": "Servicio de prueba para verificar sincronización con Roble",
+    "language": "python",
+    "code": "def handler():\n    return {\n        \"message\": \"Hello from Roble test\",\n        \"timestamp\": \"2025-10-12T21:51:39.706Z\",\n        \"service\": \"test-roble-insertion\"\n    }",
+    "type": "execution",
+    "createdAt": "2025-10-12T21:51:39.722Z"
+  },
+  {
+    "id": "37de8d61-abae-44ae-be85-958e79841e00",
+    "name": "Test Roble Insertion 1760306073592",
+    "description": "Servicio de prueba para verificar sincronización con Roble",
+    "language": "python",
+    "code": "def handler():\n    return {\n        \"message\": \"Hello from Roble test\",\n        \"timestamp\": \"2025-10-12T21:54:33.592Z\",\n        \"service\": \"test-roble-insertion\"\n    }",
+    "type": "execution",
+    "createdAt": "2025-10-12T21:54:33.606Z"
+  },
+  {
+    "id": "bd39cf60-3287-4010-a343-2a9e237e64de",
+    "name": "Unique Test Service 20251012165507",
+    "description": "Servicio único para verificar inserción en Roble",
+    "language": "python",
+    "code": "def handler():\n    return {'message': 'Unique test service', 'timestamp': '2025-10-12T16:55:07'}",
+    "type": "execution",
+    "createdAt": "2025-10-12T21:55:07.745Z"
   }
 ]

@@ -79,7 +79,18 @@ export class RobleDatabaseService {
   async readRecords(tableName: string, filters: Record<string, any> = {}): Promise<RobleQueryResult> {
     try {
       const url = `${this.databaseUrl}/read`
-      const params = new URLSearchParams({ tableName, ...filters })
+      
+      // Filtrar parámetros que no son columnas de la tabla
+      const { limit, offset, ...columnFilters } = filters
+      const params = new URLSearchParams({ tableName, ...columnFilters })
+      
+      // Agregar limit y offset como parámetros de consulta separados si existen
+      if (limit !== undefined) {
+        params.append('limit', limit.toString())
+      }
+      if (offset !== undefined) {
+        params.append('offset', offset.toString())
+      }
       
       const response = await this.request('GET', `${url}?${params}`)
       

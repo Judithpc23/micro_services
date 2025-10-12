@@ -57,9 +57,12 @@ class ServicesStore {
 	 * Mapear microservicio local al formato de Roble
 	 */
 	private mapToRobleFormat(service: Microservice, status: string = 'created'): any {
+		// Generar ID de 12 caracteres para Roble
+		const robleId = this.generateRobleId(service.id)
+		
 		return {
-			_id: service.id,
-			id: service.id,
+			_id: robleId,
+			id: robleId,
 			name: service.name,
 			description: service.description,
 			language: service.language,
@@ -69,6 +72,29 @@ class ServicesStore {
 			createAt: service.createdAt.toISOString(),
 			updatedAt: new Date().toISOString()
 		}
+	}
+	
+	/**
+	 * Generar ID de 12 caracteres para Roble basado en el ID original
+	 */
+	private generateRobleId(originalId: string): string {
+		// Crear un hash del ID original y tomar los primeros 12 caracteres
+		const hash = this.simpleHash(originalId)
+		return hash.substring(0, 12)
+	}
+	
+	/**
+	 * Función hash simple para generar ID consistente
+	 */
+	private simpleHash(str: string): string {
+		let hash = 0
+		for (let i = 0; i < str.length; i++) {
+			const char = str.charCodeAt(i)
+			hash = ((hash << 5) - hash) + char
+			hash = hash & hash // Convertir a 32bit integer
+		}
+		// Convertir a string base36 y asegurar que sea positivo
+		return Math.abs(hash).toString(36).padStart(12, '0')
 	}
 	
 	/**
@@ -87,17 +113,44 @@ class ServicesStore {
 	 * Sincronizar creación con Roble
 	 */
 	private async syncCreateToRoble(service: Microservice): Promise<void> {
-		if (!this.syncEnabled) return
+		this.log.info(`🔄 Iniciando sincronización de creación para ${service.id}`)
+		
+		if (!this.syncEnabled) {
+			this.log.warn(`⚠️ Sincronización deshabilitada para ${service.id}. SYNC_MICROSERVICES_TO_ROBLE=${process.env.SYNC_MICROSERVICES_TO_ROBLE}`)
+			return
+		}
 		
 		try {
+			this.log.info(`🔐 Verificando autenticación para ${service.id}...`)
 			// Asegurar autenticación antes de la operación
 			await this.ensureRobleAuth()
 			
+			this.log.info(`📝 Mapeando datos para ${service.id}...`)
 			const robleData = this.mapToRobleFormat(service, 'created')
-			await this.robleClient.insertRecords('microservices', [robleData])
-			this.log.info(`✅ Microservice ${service.id} created in Roble`)
+			this.log.debug(`📋 Datos mapeados para ${service.id}:`, { 
+				id: robleData.id, 
+				name: robleData.name, 
+				type: robleData.type 
+			})
+			
+			this.log.info(`💾 Insertando ${service.id} en Roble...`)
+			const insertResult = await this.robleClient.insertRecords('microservices', [robleData])
+			
+			if (insertResult.success) {
+				this.log.info(`✅ Microservice ${service.id} created in Roble successfully`)
+				this.log.debug(`📊 Resultado inserción:`, { 
+					inserted: insertResult.inserted?.length || 0,
+					skipped: insertResult.skipped?.length || 0
+				})
+			} else {
+				this.log.error(`❌ Insert failed for ${service.id}:`, { error: insertResult.error })
+			}
 		} catch (error) {
-			this.log.error(`❌ Failed to create microservice ${service.id} in Roble:`, { error: String(error) })
+			this.log.error(`❌ Failed to create microservice ${service.id} in Roble:`, { 
+				error: String(error),
+				serviceId: service.id,
+				serviceName: service.name
+			})
 		}
 	}
 	
@@ -153,27 +206,47 @@ class ServicesStore {
 			const email = process.env.ROBLE_USER_EMAIL
 			const password = process.env.ROBLE_USER_PASSWORD
 			
-			this.log.info('📋 Credenciales encontradas:', {
+			this.log.info('📋 Verificando credenciales:', {
 				email: email ? 'Configurado' : 'No configurado',
-				password: password ? 'Configurado' : 'No configurado'
+				password: password ? 'Configurado' : 'No configurado',
+				hasEmail: !!email,
+				hasPassword: !!password
 			})
 			
 			if (!email || !password) {
-				this.log.warn('⚠️ Credenciales de Roble no configuradas')
+				this.log.warn('⚠️ Credenciales de Roble no configuradas', {
+					ROBLE_USER_EMAIL: process.env.ROBLE_USER_EMAIL ? 'Definida' : 'No definida',
+					ROBLE_USER_PASSWORD: process.env.ROBLE_USER_PASSWORD ? 'Definida' : 'No definida'
+				})
 				return
 			}
 			
-			this.log.info('🔐 Autenticando con Roble...')
+			this.log.info('🔐 Iniciando autenticación con Roble...', {
+				email: email,
+				baseUrl: process.env.ROBLE_BASE_HOST,
+				contract: process.env.ROBLE_CONTRACT
+			})
+			
 			const result = await this.robleClient.login(email, password)
 			
 			if (result.success) {
-				this.log.info('✅ Autenticación con Roble exitosa')
+				this.log.info('✅ Autenticación con Roble exitosa', {
+					hasAccessToken: !!result.accessToken,
+					hasRefreshToken: !!result.refreshToken
+				})
 			} else {
-				this.log.error('❌ Error en autenticación con Roble:', { error: result.error })
+				this.log.error('❌ Error en autenticación con Roble:', { 
+					error: result.error,
+					email: email,
+					baseUrl: process.env.ROBLE_BASE_HOST
+				})
 			}
 			
 		} catch (error) {
-			this.log.error('❌ Error asegurando autenticación con Roble:', { error: String(error) })
+			this.log.error('❌ Error asegurando autenticación con Roble:', { 
+				error: String(error),
+				stack: error instanceof Error ? error.stack : undefined
+			})
 		}
 	}
 	
