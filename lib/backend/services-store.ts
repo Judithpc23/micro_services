@@ -187,11 +187,11 @@ class ServicesStore {
 			this.log.warn('Roble sync is disabled. Set SYNC_MICROSERVICES_TO_ROBLE=true to enable.')
 			return { success: 0, failed: 0 }
 		}
-		
-		const services = this.getAll()
+
+		const services = await this.getAll()
 		let success = 0
 		let failed = 0
-		
+
 		for (const service of services) {
 			try {
 				await this.syncCreateToRoble(service)
@@ -201,7 +201,7 @@ class ServicesStore {
 				this.log.error(`Failed to sync service ${service.id}:`, { error: String(error) })
 			}
 		}
-		
+
 		this.log.info(`Sync completed: ${success} success, ${failed} failed`)
 		return { success, failed }
 	}
@@ -216,10 +216,18 @@ class ServicesStore {
 		}
 	}
 
-	getAll(): Microservice[] {
-		return Array.from(this.store.values()).sort(
-			(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-		)
+	async getAll(): Promise<Microservice[]> {
+		try {
+			const raw = await fs.readFile(this.filePath, "utf8").catch(() => "[]")
+			const arr: any[] = JSON.parse(raw)
+			arr.forEach((o) => {
+				if (o.createdAt) o.createdAt = new Date(o.createdAt)
+			})
+			return arr as Microservice[]
+		} catch (err) {
+			this.log.warn("Failed to read services from disk", { error: String(err) })
+			return []
+		}
 	}
 
 	getById(id: string): Microservice | undefined {
