@@ -1,265 +1,142 @@
-version: 3.8
 services:
-  3e665c0a-23cd-407f-9253-532d5e0ad5ff:
-    container_name: microservice-3e665c0a-23cd-407f-9253-532d5e0ad5ff
+  0c88c135-2276-4685-a2e0-5b7dff83b135:
+    container_name: microservice-0c88c135-2276-4685-a2e0-5b7dff83b135
     build:
-      context: .
-      dockerfile: Dockerfile.3e665c0a-23cd-407f-9253-532d5e0ad5ff
+      context: ./services/service-0c88c135-2276-4685-a2e0-5b7dff83b135
+      dockerfile: Dockerfile
     ports:
-      - 45629:3000
+      - 45725:3000
     environment:
-      SERVICE_NAME: Mi prueba
+      SERVICE_NAME: test
       SERVICE_TYPE: execution
     restart: unless-stopped
     networks:
       - microservices-network
-  04e9adba-81e3-4bd8-9c29-f70ad248f7c7:
-    container_name: microservice-04e9adba-81e3-4bd8-9c29-f70ad248f7c7
+  a3d8abd4-f7e5-4f60-b999-e4c97834140a:
+    container_name: microservice-a3d8abd4-f7e5-4f60-b999-e4c97834140a
     build:
-      context: .
-      dockerfile: Dockerfile.04e9adba-81e3-4bd8-9c29-f70ad248f7c7
+      context: ./services/service-a3d8abd4-f7e5-4f60-b999-e4c97834140a
+      dockerfile: Dockerfile
     ports:
-      - 45837:3000
+      - 45402:3000
     environment:
-      SERVICE_NAME: jud
+      SERVICE_NAME: dasdasd
       SERVICE_TYPE: execution
     restart: unless-stopped
     networks:
       - microservices-network
-  5236c556-2f5c-4a53-8b5d-51c88ea2338b:
-    container_name: microservice-5236c556-2f5c-4a53-8b5d-51c88ea2338b
+  b8768c0a-83f6-418f-9897-5645e3f2b303:
+    container_name: microservice-b8768c0a-83f6-418f-9897-5645e3f2b303
     build:
-      context: .
-      dockerfile: Dockerfile.5236c556-2f5c-4a53-8b5d-51c88ea2338b
+      context: ./services/service-b8768c0a-83f6-418f-9897-5645e3f2b303
+      dockerfile: Dockerfile
     ports:
-      - 45860:3000
+      - 45532:3000
     environment:
-      SERVICE_NAME: jud
+      SERVICE_NAME: dadsaddsadasd
       SERVICE_TYPE: execution
     restart: unless-stopped
     networks:
       - microservices-network
-  c926faf2-2cb6-4df2-b657-0b4cd56c1d66:
-    container_name: microservice-c926faf2-2cb6-4df2-b657-0b4cd56c1d66
+  7f041e79-a027-4be4-aa90-9ecc9441a1b7:
+    container_name: microservice-7f041e79-a027-4be4-aa90-9ecc9441a1b7
     build:
-      context: .
-      dockerfile: Dockerfile.c926faf2-2cb6-4df2-b657-0b4cd56c1d66
+      context: ./services/service-7f041e79-a027-4be4-aa90-9ecc9441a1b7
+      dockerfile: Dockerfile
     ports:
-      - 45716:3000
+      - 45556:3000
     environment:
-      SERVICE_NAME: jud
+      SERVICE_NAME: fsfsdfsdf
       SERVICE_TYPE: execution
     restart: unless-stopped
     networks:
       - microservices-network
-  f6ad4314-fb9e-40a1-b38f-99c794cdeb25:
-    container_name: microservice-f6ad4314-fb9e-40a1-b38f-99c794cdeb25
+  facc5d66-acfa-4113-a068-66ab6421da4f:
+    container_name: microservice-facc5d66-acfa-4113-a068-66ab6421da4f
     build:
-      context: .
-      dockerfile: Dockerfile.f6ad4314-fb9e-40a1-b38f-99c794cdeb25
+      context: ./services/service-facc5d66-acfa-4113-a068-66ab6421da4f
+      dockerfile: Dockerfile
     ports:
-      - 45202:3000
+      - 45896:3000
     environment:
-      SERVICE_NAME: jud
+      SERVICE_NAME: cscscsc
       SERVICE_TYPE: execution
     restart: unless-stopped
     networks:
       - microservices-network
-  e820b511-805f-4e44-b27e-17eba34e4fc3:
-    container_name: microservice-e820b511-805f-4e44-b27e-17eba34e4fc3
+  f093e106-fb4e-4dba-9b3b-7c0df6c69944:
+    container_name: microservice-f093e106-fb4e-4dba-9b3b-7c0df6c69944
     build:
-      context: .
-      dockerfile: Dockerfile.e820b511-805f-4e44-b27e-17eba34e4fc3
+      context: ./services/service-f093e106-fb4e-4dba-9b3b-7c0df6c69944
+      dockerfile: Dockerfile
     ports:
-      - 45222:3000
+      - 45419:3000
     environment:
-      SERVICE_NAME: jud
+      SERVICE_NAME: fdsfsfsd
       SERVICE_TYPE: execution
     restart: unless-stopped
     networks:
       - microservices-network
-  35ddc099-05b2-47b4-8e77-bcbfb67dc11f:
-    container_name: microservice-35ddc099-05b2-47b4-8e77-bcbfb67dc11f
+  5bb40d2f-3c00-480b-939e-94b5d74aaa86:
+    container_name: microservice-5bb40d2f-3c00-480b-939e-94b5d74aaa86
     build:
-      context: .
-      dockerfile: Dockerfile.35ddc099-05b2-47b4-8e77-bcbfb67dc11f
+      context: ./services/service-5bb40d2f-3c00-480b-939e-94b5d74aaa86
+      dockerfile: Dockerfile
     ports:
-      - 45771:3000
-    environment:
-      SERVICE_NAME: judithhh
-      SERVICE_TYPE: execution
-    restart: unless-stopped
-    networks:
-      - microservices-network
-  2a7f2d73-45c0-487b-8739-d73ccfadb7fc:
-    container_name: microservice-2a7f2d73-45c0-487b-8739-d73ccfadb7fc
-    build:
-      context: .
-      dockerfile: Dockerfile.2a7f2d73-45c0-487b-8739-d73ccfadb7fc
-    ports:
-      - 45475:3000
-    environment:
-      SERVICE_NAME: hoy
-      SERVICE_TYPE: execution
-    restart: unless-stopped
-    networks:
-      - microservices-network
-  4f2e4e2c-dce1-43ae-a70d-ba54d56fb4e1:
-    container_name: microservice-4f2e4e2c-dce1-43ae-a70d-ba54d56fb4e1
-    build:
-      context: .
-      dockerfile: Dockerfile.4f2e4e2c-dce1-43ae-a70d-ba54d56fb4e1
-    ports:
-      - 45562:3000
+      - 45971:3000
     environment:
       SERVICE_NAME: hola
-      SERVICE_TYPE: execution
+      SERVICE_TYPE: roble
+      TABLE_NAME: microservices
     restart: unless-stopped
     networks:
       - microservices-network
-  37b05a95-2fe5-4ace-86fc-780598133762:
-    container_name: microservice-37b05a95-2fe5-4ace-86fc-780598133762
+  e8a4f62e-5617-4a05-8f45-82829f5e1d31:
+    container_name: microservice-e8a4f62e-5617-4a05-8f45-82829f5e1d31
     build:
-      context: .
-      dockerfile: Dockerfile.37b05a95-2fe5-4ace-86fc-780598133762
+      context: ./services/service-e8a4f62e-5617-4a05-8f45-82829f5e1d31
+      dockerfile: Dockerfile
     ports:
-      - 45841:3000
+      - 45399:3000
     environment:
-      SERVICE_NAME: nuevo
+      SERVICE_NAME: dadsad
       SERVICE_TYPE: execution
     restart: unless-stopped
     networks:
       - microservices-network
-  e1aa9dd9-570e-4a1d-9505-a9f25f5cf6b9:
-    container_name: microservice-e1aa9dd9-570e-4a1d-9505-a9f25f5cf6b9
+  967332c7-d0db-48e2-ab21-15c56f69369b:
+    container_name: microservice-967332c7-d0db-48e2-ab21-15c56f69369b
     build:
-      context: .
-      dockerfile: Dockerfile.e1aa9dd9-570e-4a1d-9505-a9f25f5cf6b9
+      context: ./services/service-967332c7-d0db-48e2-ab21-15c56f69369b
+      dockerfile: Dockerfile
     ports:
-      - 45382:3000
+      - 45928:3000
     environment:
-      SERVICE_NAME: otravez
-      SERVICE_TYPE: execution
+      SERVICE_NAME: dsadas
+      SERVICE_TYPE: roble
+      TABLE_NAME: dsadasd
+      ROBLE_PROJECT: adsadas
+      ROBLE_TOKEN: dasdasdas
     restart: unless-stopped
     networks:
       - microservices-network
-  a99a2194-08bc-45b9-bb88-87b269f0e146:
-    container_name: microservice-a99a2194-08bc-45b9-bb88-87b269f0e146
+  d38e40e5-8f1e-4ec9-9d3b-980fc4ece463:
+    container_name: microservice-d38e40e5-8f1e-4ec9-9d3b-980fc4ece463
     build:
-      context: .
-      dockerfile: Dockerfile.a99a2194-08bc-45b9-bb88-87b269f0e146
+      context: ./services/service-d38e40e5-8f1e-4ec9-9d3b-980fc4ece463
+      dockerfile: Dockerfile
     ports:
-      - 45795:3000
+      - 45043:3000
     environment:
-      SERVICE_NAME: mundo
-      SERVICE_TYPE: execution
+      SERVICE_NAME: prueba roble
+      SERVICE_TYPE: roble
+      TABLE_NAME: microservices
+      ROBLE_PROJECT: micro_services
+      ROBLE_TOKEN: micro_services_b5fd2708be
     restart: unless-stopped
     networks:
       - microservices-network
-  612efb25-3ddf-483b-9aba-2a8dbb774fa4:
-    container_name: microservice-612efb25-3ddf-483b-9aba-2a8dbb774fa4
-    build:
-      context: .
-      dockerfile: Dockerfile.612efb25-3ddf-483b-9aba-2a8dbb774fa4
-    ports:
-      - 45502:3000
-    environment:
-      SERVICE_NAME: hola
-      SERVICE_TYPE: execution
-    restart: unless-stopped
-    networks:
-      - microservices-network
-  13fb6b87-1491-4233-b2c3-bbc01b4e3b6d:
-    container_name: microservice-13fb6b87-1491-4233-b2c3-bbc01b4e3b6d
-    build:
-      context: .
-      dockerfile: Dockerfile.13fb6b87-1491-4233-b2c3-bbc01b4e3b6d
-    ports:
-      - 45832:3000
-    environment:
-      SERVICE_NAME: hola
-      SERVICE_TYPE: execution
-    restart: unless-stopped
-    networks:
-      - microservices-network
-  46a2cbc6-bd76-4a57-9311-986bac5538e5:
-    container_name: microservice-46a2cbc6-bd76-4a57-9311-986bac5538e5
-    build:
-      context: .
-      dockerfile: Dockerfile.46a2cbc6-bd76-4a57-9311-986bac5538e5
-    ports:
-      - 45867:3000
-    environment:
-      SERVICE_NAME: hola
-      SERVICE_TYPE: execution
-    restart: unless-stopped
-    networks:
-      - microservices-network
-  9c64e5fd-e3e0-4c7d-a483-c824089bf813:
-    container_name: microservice-9c64e5fd-e3e0-4c7d-a483-c824089bf813
-    build:
-      context: .
-      dockerfile: Dockerfile.9c64e5fd-e3e0-4c7d-a483-c824089bf813
-    ports:
-      - 45279:3000
-    environment:
-      SERVICE_NAME: hola
-      SERVICE_TYPE: execution
-    restart: unless-stopped
-    networks:
-      - microservices-network
-  3b02d533-fc29-406f-aa81-ad1170284302:
-    container_name: microservice-3b02d533-fc29-406f-aa81-ad1170284302
-    build:
-      context: .
-      dockerfile: Dockerfile.3b02d533-fc29-406f-aa81-ad1170284302
-    ports:
-      - 45492:3000
-    environment:
-      SERVICE_NAME: hgfjdksl
-      SERVICE_TYPE: execution
-    restart: unless-stopped
-    networks:
-      - microservices-network
-  b99dad20-adeb-4b9f-9e48-40f0edd322f9:
-    container_name: microservice-b99dad20-adeb-4b9f-9e48-40f0edd322f9
-    build:
-      context: .
-      dockerfile: Dockerfile.b99dad20-adeb-4b9f-9e48-40f0edd322f9
-    ports:
-      - 45509:3000
-    environment:
-      SERVICE_NAME: hola
-      SERVICE_TYPE: execution
-    restart: unless-stopped
-    networks:
-      - microservices-network
-  0f810039-6009-47b6-bcea-198d8eaa08b7:
-    container_name: microservice-0f810039-6009-47b6-bcea-198d8eaa08b7
-    build:
-      context: .
-      dockerfile: Dockerfile.0f810039-6009-47b6-bcea-198d8eaa08b7
-    ports:
-      - 45538:3000
-    environment:
-      SERVICE_NAME: hola
-      SERVICE_TYPE: execution
-    restart: unless-stopped
-    networks:
-      - microservices-network
-  45ff483b-2736-4289-8d21-2faac1774054:
-    container_name: microservice-45ff483b-2736-4289-8d21-2faac1774054
-    build:
-      context: .
-      dockerfile: Dockerfile.45ff483b-2736-4289-8d21-2faac1774054
-    ports:
-      - 45141:3000
-    environment:
-      SERVICE_NAME: hola
-      SERVICE_TYPE: execution
-    restart: unless-stopped
-    networks:
-      - microservices-network
+
 networks:
   microservices-network:
     driver: bridge

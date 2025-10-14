@@ -12,11 +12,10 @@ export function generateDockerCompose(service: Microservice, port: number): stri
 	if (service.type === "roble" && service.robleToken) env["ROBLE_TOKEN"] = service.robleToken
 
 	const compose = {
-		version: "3.8",
 		services: {
 			[service.id]: {
 				container_name: `microservice-${service.id}`,
-				build: { context: ".", dockerfile: `Dockerfile.${service.id}` },
+				build: { context: ".", dockerfile: `dockerfiles/Dockerfile.${service.id}` },
 				ports: [`${port}:${internalPort}`],
 				environment: env,
 				restart: "unless-stopped",
@@ -58,8 +57,7 @@ function convertToYAML(obj: any, indent = 0): string {
 }
 
 export function generateGlobalDockerCompose(services: Microservice[]): string {
-	const compose: { version: string; services: Record<string, any>; networks: any } = {
-		version: "3.8",
+	const compose: { services: Record<string, any>; networks: any } = {
 		services: {},
 		networks: { "microservices-network": { driver: "bridge" } },
 	}
@@ -82,7 +80,7 @@ export function generateGlobalDockerCompose(services: Microservice[]): string {
 
 		compose.services[service.id] = {
 			container_name: `microservice-${service.id}`,
-			build: { context: ".", dockerfile: `Dockerfile.${service.id}` },
+			build: { context: `./services/service-${service.id}`, dockerfile: `../../dockerfiles/Dockerfile.${service.id}` },
 			ports: [`${port}:3000`],
 			environment: env,
 			restart: "unless-stopped",

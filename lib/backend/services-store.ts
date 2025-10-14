@@ -3,6 +3,8 @@ import { promises as fs } from "fs"
 import path from "path"
 import { createLogger } from "@/lib/backend/logger"
 import { robleClient } from "@/lib/backend/roble-client"
+import { generateGlobalDockerCompose } from "@/lib/docker/docker-compose-generator"
+import { generateServiceFiles } from "@/lib/docker/dockerfile-generator"
 
 // Simple in-memory store for microservices. In a real app, replace with a DB.
 class ServicesStore {
@@ -292,6 +294,109 @@ class ServicesStore {
 		}
 	}
 
+	/**
+	 * Sincronizar docker-compose.yml principal con todos los servicios
+	 */
+	private async syncDockerCompose(): Promise<void> {
+		try {
+			this.log.info("🔄 Sincronizando docker-compose.yml principal...")
+			
+			// Obtener todos los servicios
+			const services = Array.from(this.store.values())
+			
+			if (services.length === 0) {
+				this.log.info("📝 No hay servicios, limpiando docker-compose.yml")
+				// Crear docker-compose vacío
+				const emptyCompose = generateGlobalDockerCompose([])
+				await fs.writeFile("docker-compose.yml", emptyCompose, "utf8")
+				return
+			}
+
+			// Generar docker-compose con todos los servicios
+			const dockerComposeContent = generateGlobalDockerCompose(services)
+			
+			// Escribir al archivo principal
+			await fs.writeFile("docker-compose.yml", dockerComposeContent, "utf8")
+			
+			this.log.info(`✅ Docker-compose.yml actualizado con ${services.length} servicios`)
+			this.log.debug("📋 Servicios incluidos:", services.map(s => ({ id: s.id, name: s.name })))
+			
+		} catch (error) {
+			this.log.error("❌ Error sincronizando docker-compose.yml:", { error: String(error) })
+		}
+	}
+
+	/**
+	 * Generar y guardar Dockerfile físico para un servicio
+	 */
+	private async generatePhysicalDockerfile(service: Microservice): Promise<void> {
+		try {
+			this.log.info(`🐳 Generando Dockerfile físico para ${service.id}...`)
+			
+			// Asegurar que la carpeta dockerfiles existe
+			const dockerfilesDir = path.join(process.cwd(), "dockerfiles")
+			await fs.mkdir(dockerfilesDir, { recursive: true })
+			
+			// Generar archivos del servicio
+			const files = generateServiceFiles(service)
+			
+			// Guardar Dockerfile físico
+			const dockerfilePath = path.join(dockerfilesDir, `Dockerfile.${service.id}`)
+			await fs.writeFile(dockerfilePath, files.dockerfile, "utf8")
+			
+			// Guardar archivos de código en el contexto de build
+			const serviceDir = path.join(process.cwd(), "services", `service-${service.id}`)
+			await fs.mkdir(serviceDir, { recursive: true })
+			
+			if (service.language === "python") {
+				await fs.writeFile(path.join(serviceDir, "main.py"), files.code, "utf8")
+				await fs.writeFile(path.join(serviceDir, "requirements.txt"), files.dependencies, "utf8")
+			} else {
+				await fs.writeFile(path.join(serviceDir, "index.js"), files.code, "utf8")
+				await fs.writeFile(path.join(serviceDir, "package.json"), files.dependencies, "utf8")
+			}
+			
+			this.log.info(`✅ Dockerfile físico creado: ${dockerfilePath}`)
+			this.log.info(`✅ Archivos de código creados en: ${serviceDir}`)
+			
+		} catch (error) {
+			this.log.error(`❌ Error generando Dockerfile físico para ${service.id}:`, { error: String(error) })
+		}
+	}
+
+	/**
+	 * Eliminar Dockerfile físico de un servicio
+	 */
+	private async deletePhysicalDockerfile(serviceId: string): Promise<void> {
+		try {
+			this.log.info(`🗑️ Eliminando Dockerfile físico para ${serviceId}...`)
+			
+			const dockerfilePath = path.join(process.cwd(), "dockerfiles", `Dockerfile.${serviceId}`)
+			const serviceDir = path.join(process.cwd(), "services", `service-${serviceId}`)
+			
+			// Eliminar Dockerfile
+			try {
+				await fs.access(dockerfilePath)
+				await fs.unlink(dockerfilePath)
+				this.log.info(`✅ Dockerfile físico eliminado: ${dockerfilePath}`)
+			} catch (error) {
+				this.log.debug(`📝 Dockerfile no existía: ${dockerfilePath}`)
+			}
+			
+			// Eliminar directorio de servicio y archivos de código
+			try {
+				await fs.access(serviceDir)
+				await fs.rm(serviceDir, { recursive: true, force: true })
+				this.log.info(`✅ Archivos de código eliminados: ${serviceDir}`)
+			} catch (error) {
+				this.log.debug(`📝 Directorio de servicio no existía: ${serviceDir}`)
+			}
+			
+		} catch (error) {
+			this.log.error(`❌ Error eliminando Dockerfile físico para ${serviceId}:`, { error: String(error) })
+		}
+	}
+
 	async getAll(): Promise<Microservice[]> {
 		try {
 			const raw = await fs.readFile(this.filePath, "utf8").catch(() => "[]")
@@ -315,9 +420,19 @@ class ServicesStore {
 		this.store.set(service.id, service)
 		this.scheduleWrite()
 		
+		// Generar Dockerfile físico (asíncrono, no bloquea)
+		this.generatePhysicalDockerfile(service).catch(error => {
+			this.log.warn(`Failed to generate physical dockerfile for ${service.id}:`, error)
+		})
+		
 		// Sincronizar con Roble (asíncrono, no bloquea)
 		this.syncCreateToRoble(service).catch(error => {
 			this.log.warn(`Failed to sync create for ${service.id}:`, error)
+		})
+		
+		// Sincronizar docker-compose.yml (asíncrono, no bloquea)
+		this.syncDockerCompose().catch(error => {
+			this.log.warn(`Failed to sync docker-compose for ${service.id}:`, error)
 		})
 		
 		return service
@@ -332,9 +447,19 @@ class ServicesStore {
 		this.store.set(id, updated)
 		this.scheduleWrite()
 		
+		// Regenerar Dockerfile físico (asíncrono, no bloquea)
+		this.generatePhysicalDockerfile(updated).catch(error => {
+			this.log.warn(`Failed to regenerate physical dockerfile for ${id}:`, error)
+		})
+		
 		// Sincronizar con Roble (asíncrono, no bloquea)
 		this.syncUpdateToRoble(updated).catch(error => {
 			this.log.warn(`Failed to sync update for ${id}:`, error)
+		})
+		
+		// Sincronizar docker-compose.yml (asíncrono, no bloquea)
+		this.syncDockerCompose().catch(error => {
+			this.log.warn(`Failed to sync docker-compose for ${id}:`, error)
 		})
 		
 		return updated
@@ -345,9 +470,19 @@ class ServicesStore {
 		if (res) {
 			this.scheduleWrite()
 			
+			// Eliminar Dockerfile físico (asíncrono, no bloquea)
+			this.deletePhysicalDockerfile(id).catch(error => {
+				this.log.warn(`Failed to delete physical dockerfile for ${id}:`, error)
+			})
+			
 			// Sincronizar con Roble (asíncrono, no bloquea)
 			this.syncDeleteToRoble(id).catch(error => {
 				this.log.warn(`Failed to sync delete for ${id}:`, error)
+			})
+			
+			// Sincronizar docker-compose.yml (asíncrono, no bloquea)
+			this.syncDockerCompose().catch(error => {
+				this.log.warn(`Failed to sync docker-compose for ${id}:`, error)
 			})
 		}
 		return res

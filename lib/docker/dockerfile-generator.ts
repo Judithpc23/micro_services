@@ -22,9 +22,11 @@ function generatePythonDockerfile(service: Microservice): string {
 	return `# Dockerfile for ${service.name}
 # Language: Python
 # Type: ${service.type}
+# Optimized with dependency caching
 
 FROM python:3.11-slim
 
+# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \\
 		PYTHONUNBUFFERED=1 \\
 		HOST=0.0.0.0 \\
@@ -35,23 +37,30 @@ ${hasTable ? `ENV ROBLE_TABLE_NAME="${service.tableName}"` : "# No Roble table c
 ${hasProject ? `ENV ROBLE_PROJECT="${service.robleProjectName}"` : "# No Roble project configured"}
 ${hasToken ? `ENV ROBLE_TOKEN="${service.robleToken}"` : "# No Roble token configured"}
 
+# Create non-root user for security
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
 WORKDIR /app
 
-# Dependencias primero para cache estable
+# Copy requirements first for better caching
 COPY requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r /app/requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \\
+    pip install --no-cache-dir -r /app/requirements.txt
 
-# Copia TODO el código del servicio (endpoints, módulos, etc.)
-COPY . /app
+# Copy application code
+COPY --chown=appuser:appuser . /app
 
-# Salud básica (opcional, Flask responde en /health o /)
+# Switch to non-root user
+USER appuser
+
+# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \\
 	CMD python -c "import sys,urllib.request as u; u.urlopen('http://127.0.0.1:'+__import__('os').environ.get('PORT','3000')+'/health'); sys.exit(0)" \\
 	|| exit 1
 
 EXPOSE ${"${PORT}"}
 
-# Importante: tu main.py debe hacer app.run(host='0.0.0.0', port=int(os.getenv('PORT', '3000')))
+# Start application
 CMD ["python", "main.py"]
 `
 }
@@ -64,9 +73,11 @@ function generateJavaScriptDockerfile(service: Microservice): string {
 	return `# Dockerfile for ${service.name}
 # Language: JavaScript (Node.js)
 # Type: ${service.type}
+# Optimized with dependency caching
 
 FROM node:18-alpine
 
+# Set environment variables
 ENV NODE_ENV=production \\
 		HOST=0.0.0.0 \\
 		PORT=3000 \\
@@ -76,22 +87,32 @@ ${hasTable ? `ENV ROBLE_TABLE_NAME="${service.tableName}"` : "# No Roble table c
 ${hasProject ? `ENV ROBLE_PROJECT="${service.robleProjectName}"` : "# No Roble project configured"}
 ${hasToken ? `ENV ROBLE_TOKEN="${service.robleToken}"` : "# No Roble token configured"}
 
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \\
+    adduser -S nodejs -u 1001
+
 WORKDIR /app
 
-# Instala dependencias con mejor cache
-COPY package.json package-lock.json* /app/
-RUN npm ci --only=production || npm install --production
+# Copy package files first for better caching
+COPY package.json package-lock.json* ./
 
-# Copia TODO el código del servicio
-COPY . /app
+# Install dependencies
+RUN npm ci --only=production --silent && \\
+    npm cache clean --force
 
-# Salud básica (Express responde en /health o /)
+# Copy application code
+COPY --chown=nodejs:nodejs . /app
+
+# Switch to non-root user
+USER nodejs
+
+# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \\
 	CMD node -e "fetch('http://127.0.0.1:'+ (process.env.PORT||3000) +'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 EXPOSE ${"${PORT}"}
 
-# Importante: tu index.js debe usar app.listen(process.env.PORT || 3000, '0.0.0.0')
+# Start application
 CMD ["node", "index.js"]
 `
 }

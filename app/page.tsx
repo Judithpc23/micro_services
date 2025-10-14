@@ -21,7 +21,10 @@ export default function Home() {
     fetchServices()
   }, [])
 
-  const fetchServices = async () => {
+  const fetchServices = async (showLoading = true) => {
+    if (showLoading) {
+      setLoading(true)
+    }
     try {
       const response = await fetch("/api/services")
       if (!response.ok) throw new Error("Failed to fetch services")
@@ -40,7 +43,30 @@ export default function Home() {
         variant: "destructive",
       })
     } finally {
-      setLoading(false)
+      if (showLoading) {
+        setLoading(false)
+      }
+    }
+  }
+
+  const fetchServicesWithStatus = async () => {
+    try {
+      const response = await fetch("/api/services/status")
+      if (!response.ok) throw new Error("Failed to fetch service status")
+      const data = await response.json()
+      
+      if (data.success) {
+        // Convert date strings to Date objects and update services
+        const servicesWithDates = data.services.map((s: Microservice) => ({
+          ...s,
+          createdAt: new Date(s.createdAt),
+        }))
+        setServices(servicesWithDates)
+      }
+    } catch (error) {
+      console.error("Error fetching service status:", error)
+      // Fallback to regular fetch if status endpoint fails
+      await fetchServices(false)
     }
   }
 
@@ -144,6 +170,11 @@ export default function Home() {
     setEditingService(null)
   }
 
+  const handleServicesUpdate = async () => {
+    // Refresh services data with status information (silent update)
+    await fetchServicesWithStatus()
+  }
+
   const handleExecuteService = async (id: string) => {
     try {
       const response = await fetch(`/api/services/${id}/execute`, { method: "POST" })
@@ -203,7 +234,7 @@ export default function Home() {
             </div>
 
             {/* Bulk Controls */}
-            {services.length > 0 && <BulkControls />}
+            {services.length > 0 && <BulkControls onServicesUpdate={handleServicesUpdate} />}
 
             {loading ? (
               <div className="flex items-center justify-center rounded-lg border border-border bg-card/30 p-12">

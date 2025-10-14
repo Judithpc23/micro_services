@@ -5,7 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Play, Square, Loader2, RefreshCw } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 
-export function BulkControls() {
+interface BulkControlsProps {
+  onServicesUpdate?: () => void
+}
+
+export function BulkControls({ onServicesUpdate }: BulkControlsProps) {
   const [isStarting, setIsStarting] = useState(false)
   const [isStopping, setIsStopping] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
@@ -25,8 +29,8 @@ export function BulkControls() {
           title: "✅ Services Started",
           description: `Successfully started ${data.services.length} microservices`,
         })
-        // Refresh the page to update the UI
-        window.location.reload()
+        // Update services state without page reload
+        onServicesUpdate?.()
       } else {
         toast({
           title: "❌ Start Failed",
@@ -60,8 +64,8 @@ export function BulkControls() {
           title: "🛑 Services Stopped",
           description: `Successfully stopped ${data.services.length} microservices`,
         })
-        // Refresh the page to update the UI
-        window.location.reload()
+        // Update services state without page reload
+        onServicesUpdate?.()
       } else {
         toast({
           title: "❌ Stop Failed",
@@ -95,8 +99,8 @@ export function BulkControls() {
           title: "🔄 Containers Synced",
           description: "Container states synchronized with Docker",
         })
-        // Refresh the page to update the UI
-        window.location.reload()
+        // Update services state without page reload
+        onServicesUpdate?.()
       } else {
         toast({
           title: "❌ Sync Failed",
