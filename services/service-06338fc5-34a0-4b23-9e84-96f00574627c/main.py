@@ -7,8 +7,8 @@ app = Flask(__name__)
 def home():
     return jsonify({
         "message": "Service ready",
-        "serviceId": "967332c7-d0db-48e2-ab21-15c56f69369b",
-        "endpoint": f"http://localhost:3000/967332c7-d0db-48e2-ab21-15c56f69369b",
+        "serviceId": "06338fc5-34a0-4b23-9e84-96f00574627c",
+        "endpoint": f"http://localhost:3000/06338fc5-34a0-4b23-9e84-96f00574627c",
         "status": "running"
     })
 
@@ -28,7 +28,30 @@ def execute():
             locals()[key] = value
 
         # Ejecutar el código personalizado del usuario
-        adsdasdasdas
+        # Roble Microservice - Python
+        # This service can interact with your Roble database
+        
+        def main():
+            # Example: Read all records from the table
+            records = read_data()
+            print(f"Found {len(records)} records")
+            
+            # Process the records as needed
+            for record in records:
+                print(f"Record ID: {record.get('_id')}")
+                print(f"Data: {record}")
+            
+            return {
+                "message": "Roble microservice executed successfully",
+                "records_count": len(records),
+                "status": "completed"
+            }
+        
+        # Available helper functions:
+        # - read_data(filters=None): Read records from the table
+        # - insert_data(records): Insert new records
+        # - update_data(record_id, updates): Update a specific record
+        # - delete_data(record_id): Delete a specific record
         
         # Si el código define una función, ejecutarla automáticamente
         result = "Execution completed"

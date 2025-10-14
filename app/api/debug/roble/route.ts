@@ -75,7 +75,7 @@ export async function GET() {
     try {
       if (diagnostics.authentication.isAuthenticated) {
         // Intentar leer la tabla microservices
-        const readResult = await robleClient.readRecords('microservices', { limit: 1 })
+        const readResult = await robleClient.readRecords('microservices')
         diagnostics.database = {
           canRead: readResult.success,
           readResult: readResult.success ? "Tabla accesible" : readResult.error

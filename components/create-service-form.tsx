@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Plus, Loader2, Save, X } from "lucide-react"
 import type { Microservice } from "@/lib/types/microservice"
 import type { ServiceLanguage, ServiceType } from "@/app/page"
+import { RobleTableSelector } from "@/components/roble-table-selector"
 
 interface CreateServiceFormProps {
   onCreateService: (service: Omit<Microservice, "id" | "createdAt">) => void
@@ -30,10 +31,16 @@ export function CreateServiceForm({
   const [language, setLanguage] = useState<ServiceLanguage>("python")
   const [code, setCode] = useState("")
   const [type, setType] = useState<ServiceType>("execution")
-  // UI field for Roble table name
-  const [tableName, setTableName] = useState("")
-  const [robleProjectName, setRobleProjectName] = useState("")
+  
+  // Roble configuration states
+  const [robleMode, setRobleMode] = useState<"current" | "different">("current")
+  const [robleContract, setRobleContract] = useState("")
+  const [robleEmail, setRobleEmail] = useState("")
+  const [roblePassword, setRoblePassword] = useState("")
   const [robleToken, setRobleToken] = useState("")
+  const [authMethod, setAuthMethod] = useState<"token" | "credentials">("token")
+  const [selectedTable, setSelectedTable] = useState("")
+  
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
@@ -43,10 +50,13 @@ export function CreateServiceForm({
       setLanguage(editingService.language)
       setCode(editingService.code)
       setType(editingService.type)
-  // Prefill table name if present
-      setTableName(editingService.tableName || "")
-      setRobleProjectName(editingService.robleProjectName || "")
+      // Prefill Roble fields if present
+      setRobleMode(editingService.robleMode || "current")
+      setRobleContract(editingService.robleContract || "")
+      setRobleEmail(editingService.robleEmail || "")
+      setRoblePassword(editingService.roblePassword || "")
       setRobleToken(editingService.robleToken || "")
+      setSelectedTable(editingService.tableName || "")
     } else {
       // Reset form when not editing
       setName("")
@@ -54,11 +64,82 @@ export function CreateServiceForm({
       setCode("")
       setLanguage("python")
       setType("execution")
-      setTableName("")
-      setRobleProjectName("")
+      setRobleMode("current")
+      setRobleContract("")
+      setRobleEmail("")
+      setRoblePassword("")
       setRobleToken("")
+      setSelectedTable("")
     }
   }, [editingService])
+
+  // Set default code when type changes to "roble"
+  useEffect(() => {
+    if (type === "roble" && !editingService) {
+      if (language === "python") {
+        setCode(`# Roble Microservice - Python
+# This service can interact with your Roble database
+
+def main():
+    # Example: Read all records from the table
+    records = read_data()
+    print(f"Found {len(records)} records")
+    
+    # Process the records as needed
+    for record in records:
+        print(f"Record ID: {record.get('_id')}")
+        print(f"Data: {record}")
+    
+    return {
+        "message": "Roble microservice executed successfully",
+        "records_count": len(records),
+        "status": "completed"
+    }
+
+# Available helper functions:
+# - read_data(filters=None): Read records from the table
+# - insert_data(records): Insert new records
+# - update_data(record_id, updates): Update a specific record
+# - delete_data(record_id): Delete a specific record`)
+      } else {
+        setCode(`// Roble Microservice - JavaScript
+// This service can interact with your Roble database
+
+async function main() {
+    try {
+        // Example: Read all records from the table
+        const records = await readData();
+        console.log(\`Found \${records.length} records\`);
+        
+        // Process the records as needed
+        for (const record of records) {
+            console.log(\`Record ID: \${record._id}\`);
+            console.log('Data:', record);
+        }
+        
+        return {
+            message: 'Roble microservice executed successfully',
+            recordsCount: records.length,
+            status: 'completed'
+        };
+    } catch (error) {
+        console.error('Error in microservice:', error);
+        return {
+            message: 'Error executing microservice',
+            error: error.message,
+            status: 'error'
+        };
+    }
+}
+
+// Available helper functions:
+// - readData(filters): Read records from the table
+// - insertData(records): Insert new records  
+// - updateData(recordId, updates): Update a specific record
+// - deleteData(recordId): Delete a specific record`)
+      }
+    }
+  }, [type, language, editingService])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -67,35 +148,47 @@ export function CreateServiceForm({
       return
     }
 
-    // For Roble services, table name, project name, and token are required
-    if (type === "roble" && (!tableName || !robleProjectName || !robleToken)) {
-      return
+    // For Roble services, validate based on mode
+    if (type === "roble") {
+      if (!selectedTable) {
+        return
+      }
+      
+      if (robleMode === "different") {
+        if (!robleContract) {
+          return
+        }
+        
+        if (authMethod === "token" && !robleToken) {
+          return
+        }
+        
+        if (authMethod === "credentials" && (!robleEmail || !roblePassword)) {
+          return
+        }
+      }
     }
 
     setIsSubmitting(true)
     try {
+      const serviceData = {
+        name,
+        description,
+        language,
+        code,
+        type,
+        tableName: type === "roble" ? selectedTable : undefined,
+        robleMode: type === "roble" ? robleMode : undefined,
+        robleContract: type === "roble" && robleMode === "different" ? robleContract : undefined,
+        robleEmail: type === "roble" && robleMode === "different" && authMethod === "credentials" ? robleEmail : undefined,
+        roblePassword: type === "roble" && robleMode === "different" && authMethod === "credentials" ? roblePassword : undefined,
+        robleToken: type === "roble" && robleMode === "different" && authMethod === "token" ? robleToken : undefined,
+      }
+
       if (editingService && onUpdateService) {
-        await onUpdateService(editingService.id, {
-          name,
-          description,
-          language,
-          code,
-          type,
-          tableName: type === "roble" ? tableName : undefined,
-          robleProjectName: type === "roble" ? robleProjectName : undefined,
-          robleToken: type === "roble" ? robleToken : undefined,
-        })
+        await onUpdateService(editingService.id, serviceData)
       } else {
-        await onCreateService({
-          name,
-          description,
-          language,
-          code,
-          type,
-          tableName: type === "roble" ? tableName : undefined,
-          robleProjectName: type === "roble" ? robleProjectName : undefined,
-          robleToken: type === "roble" ? robleToken : undefined,
-        })
+        await onCreateService(serviceData)
       }
 
       // Reset form only if creating (not editing)
@@ -105,9 +198,12 @@ export function CreateServiceForm({
         setCode("")
         setLanguage("python")
         setType("execution")
-        setTableName("")
-        setRobleProjectName("")
+        setRobleMode("current")
+        setRobleContract("")
+        setRobleEmail("")
+        setRoblePassword("")
         setRobleToken("")
+        setSelectedTable("")
       }
     } finally {
       setIsSubmitting(false)
@@ -225,55 +321,171 @@ export function CreateServiceForm({
           </div>
 
           {type === "roble" && (
-            <div className="space-y-2">
-              <Label htmlFor="tableName">Table Name</Label>
-              <Input
-                id="tableName"
-                type="text"
-                placeholder="Enter the Roble table name, e.g. microservices"
-                value={tableName}
-                onChange={(e) => setTableName(e.target.value)}
-                required
-                disabled={isSubmitting}
-                className="bg-input border-border font-mono text-sm"
-              />
-              <p className="text-xs text-muted-foreground">
-                This will be used to target the table in Roble where records are managed
-              </p>
-            </div>
-          )}
+            <div className="space-y-4 border rounded-lg p-4 bg-muted/50">
+              <h4 className="font-medium text-sm">Roble Configuration</h4>
+              
+              {/* Modo de Configuración */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Configuration Mode</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setRobleMode("current")}
+                    disabled={isSubmitting}
+                    className={`rounded-md border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
+                      robleMode === "current"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-input text-muted-foreground hover:bg-secondary"
+                    }`}
+                  >
+                    Current Project
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRobleMode("different")}
+                    disabled={isSubmitting}
+                    className={`rounded-md border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
+                      robleMode === "different"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-input text-muted-foreground hover:bg-secondary"
+                    }`}
+                  >
+                    Different Project
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {robleMode === "current" 
+                    ? "Use current project configuration from environment variables"
+                    : "Configure a different Roble project with custom credentials"
+                  }
+                </p>
+              </div>
 
-          {type === "roble" && (
-            <div className="space-y-2">
-              <Label htmlFor="robleProjectName">Roble Project Name</Label>
-              <Input
-                id="robleProjectName"
-                type="text"
-                placeholder="Enter the Roble project name"
-                value={robleProjectName}
-                onChange={(e) => setRobleProjectName(e.target.value)}
-                required
-                disabled={isSubmitting}
-                className="bg-input border-border text-sm"
-              />
-              <p className="text-xs text-muted-foreground">Project/workspace name in Roble</p>
-            </div>
-          )}
+              {/* Modo Current Project */}
+              {robleMode === "current" && (
+                <div className="space-y-4">
+                  <div className="text-sm text-muted-foreground p-2 bg-muted rounded">
+                    Using environment variables: ROBLE_BASE_HOST, ROBLE_CONTRACT, ROBLE_USER_EMAIL, ROBLE_USER_PASSWORD
+                  </div>
+                  
+                  <RobleTableSelector
+                    onTableSelect={setSelectedTable}
+                    selectedTable={selectedTable}
+                  />
+                </div>
+              )}
 
-          {type === "roble" && (
-            <div className="space-y-2">
-              <Label htmlFor="robleToken">Roble Token</Label>
-              <Input
-                id="robleToken"
-                type="password"
-                placeholder="Paste the Roble access token"
-                value={robleToken}
-                onChange={(e) => setRobleToken(e.target.value)}
-                required
-                disabled={isSubmitting}
-                className="bg-input border-border font-mono text-sm"
-              />
-              <p className="text-xs text-muted-foreground">This token is used for Roble authorization</p>
+              {/* Modo Different Project */}
+              {robleMode === "different" && (
+                <div className="space-y-4">
+                  {/* Contract */}
+                  <div className="space-y-2">
+                    <Label htmlFor="robleContract">Roble Contract/DB Name</Label>
+                    <Input
+                      id="robleContract"
+                      placeholder="token_contract_xyz"
+                      value={robleContract}
+                      onChange={(e) => setRobleContract(e.target.value)}
+                      required
+                      disabled={isSubmitting}
+                      className="font-mono text-sm"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Database/contract identifier in Roble
+                    </p>
+                  </div>
+
+                  {/* Método de Autenticación */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Authentication Method</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setAuthMethod("token")}
+                        disabled={isSubmitting}
+                        className={`rounded-md border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
+                          authMethod === "token"
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-input text-muted-foreground hover:bg-secondary"
+                        }`}
+                      >
+                        Access Token
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAuthMethod("credentials")}
+                        disabled={isSubmitting}
+                        className={`rounded-md border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
+                          authMethod === "credentials"
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-input text-muted-foreground hover:bg-secondary"
+                        }`}
+                      >
+                        Email/Password
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Autenticación por Token */}
+                  {authMethod === "token" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="robleToken">Roble Access Token</Label>
+                      <Input
+                        id="robleToken"
+                        type="password"
+                        placeholder="Paste the Roble access token"
+                        value={robleToken}
+                        onChange={(e) => setRobleToken(e.target.value)}
+                        required
+                        disabled={isSubmitting}
+                        className="font-mono text-sm"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Token for Roble authentication
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Autenticación por Credenciales */}
+                  {authMethod === "credentials" && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="robleEmail">Roble Email</Label>
+                        <Input
+                          id="robleEmail"
+                          type="email"
+                          placeholder="user@uninorte.edu.co"
+                          value={robleEmail}
+                          onChange={(e) => setRobleEmail(e.target.value)}
+                          required
+                          disabled={isSubmitting}
+                          className="font-mono text-sm"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="roblePassword">Roble Password</Label>
+                        <Input
+                          id="roblePassword"
+                          type="password"
+                          placeholder="Your Roble password"
+                          value={roblePassword}
+                          onChange={(e) => setRoblePassword(e.target.value)}
+                          required
+                          disabled={isSubmitting}
+                          className="font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Selector de Tablas para Proyecto Diferente */}
+                  <RobleTableSelector
+                    onTableSelect={setSelectedTable}
+                    selectedTable={selectedTable}
+                  />
+                </div>
+              )}
             </div>
           )}
 
@@ -292,7 +504,9 @@ export function CreateServiceForm({
               required
               disabled={isSubmitting}
               rows={8}
-              className="bg-input border-border font-mono text-sm resize-none"
+              className={`bg-input border-border font-mono text-sm resize-none ${
+                type === "roble" && !editingService ? "text-muted-foreground" : ""
+              }`}
             />
           </div>
 

@@ -112,7 +112,7 @@ export class RobleClient {
         name: service.name,
         description: service.description,
         tableName: service.tableName,
-        project: service.robleProjectName,
+        project: service.robleContract,
       },
       expected: [200, 201],
     })
@@ -250,6 +250,10 @@ export class RobleClient {
   isAuthenticated(): boolean {
     return this.authService.isAuthenticated()
   }
+
+  getAccessToken(): string | undefined {
+    return this.authService.getAccessToken()
+  }
   
   // ===== DATABASE METHODS =====
   
@@ -294,6 +298,7 @@ export class RobleClient {
   async getTableData(tableName: string, schema: string = 'public'): Promise<RobleQueryResult> {
     return this.databaseService.getTableData(tableName, schema)
   }
+  
 }
 
 export const robleClient = new RobleClient()

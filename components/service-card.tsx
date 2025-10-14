@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Edit2, Play, Trash2, Lock, FileCode, Square, ExternalLink, Activity, TerminalSquare } from "lucide-react"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Edit2, Play, Trash2, Lock, FileCode, Square, ExternalLink, Activity, TerminalSquare, AlertCircle } from "lucide-react"
 import type { Microservice } from "@/lib/types/microservice"
 import { DockerfileViewer } from "./dockerfile-viewer"
 import { InvokeServiceDialog } from "./invoke-service-dialog"
@@ -22,6 +23,7 @@ interface ContainerInfo {
   endpoint: string | null
   port: number | null
   startedAt: string | null
+  error: string | null
 }
 
 export function ServiceCard({ service, onDelete, onEdit, onExecute }: ServiceCardProps) {
@@ -29,6 +31,7 @@ export function ServiceCard({ service, onDelete, onEdit, onExecute }: ServiceCar
   const [containerInfo, setContainerInfo] = useState<ContainerInfo | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showInvoke, setShowInvoke] = useState(false)
+  const [showError, setShowError] = useState(false)
 
   const languageColors = {
     python: "bg-blue-500/10 text-blue-400 border-blue-500/20",
@@ -37,7 +40,8 @@ export function ServiceCard({ service, onDelete, onEdit, onExecute }: ServiceCar
 
   useEffect(() => {
     fetchStatus()
-    const interval = setInterval(fetchStatus, 3000)
+    // Poll more frequently initially, then slow down
+    const interval = setInterval(fetchStatus, 1000)
     return () => clearInterval(interval)
   }, [service.id])
 
@@ -75,9 +79,37 @@ export function ServiceCard({ service, onDelete, onEdit, onExecute }: ServiceCar
     setIsLoading(true)
     try {
       onExecute(service.id)
-      // Wait a bit for the container to start, then fetch status
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      await fetchStatus()
+      // Immediately set status to starting for better UX
+      setContainerInfo(prev => prev ? { ...prev, status: "starting" } : {
+        serviceId: service.id,
+        status: "starting",
+        endpoint: null,
+        port: null,
+        startedAt: null,
+        error: null
+      })
+      
+      // Poll more aggressively after starting
+      let attempts = 0
+      const maxAttempts = 10
+      const pollInterval = 500
+      
+      const pollForStatus = async () => {
+        if (attempts >= maxAttempts) return
+        
+        attempts++
+        await fetchStatus()
+        
+        // Check current status after fetch
+        const currentStatus = containerInfo?.status
+        if (currentStatus === "starting" && attempts < maxAttempts) {
+          setTimeout(pollForStatus, pollInterval)
+        }
+      }
+      
+      // Start polling after a short delay
+      setTimeout(pollForStatus, 500)
+      
     } catch (error) {
       console.error("Failed to execute service:", error)
     } finally {
@@ -96,9 +128,15 @@ export function ServiceCard({ service, onDelete, onEdit, onExecute }: ServiceCar
     }
 
     const config = statusConfig[containerInfo.status]
+    const isError = containerInfo.status === "error" && containerInfo.error
 
     return (
-      <Badge variant="outline" className={config.color}>
+      <Badge 
+        variant="outline" 
+        className={`${config.color} ${isError ? 'cursor-pointer hover:bg-red-500/20 transition-colors' : ''}`}
+        onClick={isError ? () => setShowError(true) : undefined}
+        title={isError ? "Click to view error details" : undefined}
+      >
         <Activity className="h-3 w-3 mr-1" />
         {config.label}
       </Badge>
@@ -240,6 +278,38 @@ export function ServiceCard({ service, onDelete, onEdit, onExecute }: ServiceCar
         onOpenChange={setShowDockerfile}
       />
       <InvokeServiceDialog serviceId={service.id} open={showInvoke} onOpenChange={setShowInvoke} />
+      
+      {/* Error Dialog */}
+      <Dialog open={showError} onOpenChange={setShowError}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-400">
+              <AlertCircle className="h-5 w-5" />
+              Service Error
+            </DialogTitle>
+            <DialogDescription>
+              The service "{service.name}" encountered an error and could not start properly.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+              <h4 className="font-medium text-red-400 mb-2">Error Details:</h4>
+              <pre className="text-sm text-red-300 whitespace-pre-wrap break-words font-mono">
+                {containerInfo?.error || "No error details available"}
+              </pre>
+            </div>
+            <div className="mt-4 text-sm text-muted-foreground">
+              <p>To resolve this error:</p>
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                <li>Check the service code for syntax errors</li>
+                <li>Verify all dependencies are correctly specified</li>
+                <li>Ensure the service configuration is valid</li>
+                <li>Try stopping and starting the service again</li>
+              </ul>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

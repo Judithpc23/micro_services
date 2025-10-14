@@ -1,87 +1,9 @@
 services:
-  0c88c135-2276-4685-a2e0-5b7dff83b135:
-    container_name: microservice-0c88c135-2276-4685-a2e0-5b7dff83b135
-    build:
-      context: ./services/service-0c88c135-2276-4685-a2e0-5b7dff83b135
-      dockerfile: Dockerfile
-    ports:
-      - 45725:3000
-    environment:
-      SERVICE_NAME: test
-      SERVICE_TYPE: execution
-    restart: unless-stopped
-    networks:
-      - microservices-network
-  a3d8abd4-f7e5-4f60-b999-e4c97834140a:
-    container_name: microservice-a3d8abd4-f7e5-4f60-b999-e4c97834140a
-    build:
-      context: ./services/service-a3d8abd4-f7e5-4f60-b999-e4c97834140a
-      dockerfile: Dockerfile
-    ports:
-      - 45402:3000
-    environment:
-      SERVICE_NAME: dasdasd
-      SERVICE_TYPE: execution
-    restart: unless-stopped
-    networks:
-      - microservices-network
-  b8768c0a-83f6-418f-9897-5645e3f2b303:
-    container_name: microservice-b8768c0a-83f6-418f-9897-5645e3f2b303
-    build:
-      context: ./services/service-b8768c0a-83f6-418f-9897-5645e3f2b303
-      dockerfile: Dockerfile
-    ports:
-      - 45532:3000
-    environment:
-      SERVICE_NAME: dadsaddsadasd
-      SERVICE_TYPE: execution
-    restart: unless-stopped
-    networks:
-      - microservices-network
-  7f041e79-a027-4be4-aa90-9ecc9441a1b7:
-    container_name: microservice-7f041e79-a027-4be4-aa90-9ecc9441a1b7
-    build:
-      context: ./services/service-7f041e79-a027-4be4-aa90-9ecc9441a1b7
-      dockerfile: Dockerfile
-    ports:
-      - 45556:3000
-    environment:
-      SERVICE_NAME: fsfsdfsdf
-      SERVICE_TYPE: execution
-    restart: unless-stopped
-    networks:
-      - microservices-network
-  facc5d66-acfa-4113-a068-66ab6421da4f:
-    container_name: microservice-facc5d66-acfa-4113-a068-66ab6421da4f
-    build:
-      context: ./services/service-facc5d66-acfa-4113-a068-66ab6421da4f
-      dockerfile: Dockerfile
-    ports:
-      - 45896:3000
-    environment:
-      SERVICE_NAME: cscscsc
-      SERVICE_TYPE: execution
-    restart: unless-stopped
-    networks:
-      - microservices-network
-  f093e106-fb4e-4dba-9b3b-7c0df6c69944:
-    container_name: microservice-f093e106-fb4e-4dba-9b3b-7c0df6c69944
-    build:
-      context: ./services/service-f093e106-fb4e-4dba-9b3b-7c0df6c69944
-      dockerfile: Dockerfile
-    ports:
-      - 45419:3000
-    environment:
-      SERVICE_NAME: fdsfsfsd
-      SERVICE_TYPE: execution
-    restart: unless-stopped
-    networks:
-      - microservices-network
   5bb40d2f-3c00-480b-939e-94b5d74aaa86:
     container_name: microservice-5bb40d2f-3c00-480b-939e-94b5d74aaa86
     build:
       context: ./services/service-5bb40d2f-3c00-480b-939e-94b5d74aaa86
-      dockerfile: Dockerfile
+      dockerfile: ../../dockerfiles/Dockerfile.5bb40d2f-3c00-480b-939e-94b5d74aaa86
     ports:
       - 45971:3000
     environment:
@@ -91,52 +13,48 @@ services:
     restart: unless-stopped
     networks:
       - microservices-network
-  e8a4f62e-5617-4a05-8f45-82829f5e1d31:
-    container_name: microservice-e8a4f62e-5617-4a05-8f45-82829f5e1d31
+  e1208190-d415-4f62-90bf-d55626ed16d2:
+    container_name: microservice-e1208190-d415-4f62-90bf-d55626ed16d2
     build:
-      context: ./services/service-e8a4f62e-5617-4a05-8f45-82829f5e1d31
-      dockerfile: Dockerfile
+      context: ./services/service-e1208190-d415-4f62-90bf-d55626ed16d2
+      dockerfile: ../../dockerfiles/Dockerfile.e1208190-d415-4f62-90bf-d55626ed16d2
     ports:
-      - 45399:3000
+      - 45273:3000
     environment:
-      SERVICE_NAME: dadsad
-      SERVICE_TYPE: execution
-    restart: unless-stopped
-    networks:
-      - microservices-network
-  967332c7-d0db-48e2-ab21-15c56f69369b:
-    container_name: microservice-967332c7-d0db-48e2-ab21-15c56f69369b
-    build:
-      context: ./services/service-967332c7-d0db-48e2-ab21-15c56f69369b
-      dockerfile: Dockerfile
-    ports:
-      - 45928:3000
-    environment:
-      SERVICE_NAME: dsadas
+      SERVICE_NAME: dddd
       SERVICE_TYPE: roble
-      TABLE_NAME: dsadasd
-      ROBLE_PROJECT: adsadas
-      ROBLE_TOKEN: dasdasdas
+      TABLE_NAME: microservices
     restart: unless-stopped
     networks:
       - microservices-network
-  d38e40e5-8f1e-4ec9-9d3b-980fc4ece463:
-    container_name: microservice-d38e40e5-8f1e-4ec9-9d3b-980fc4ece463
+  e3153fdf-2ff6-4291-a772-021962964e88:
+    container_name: microservice-e3153fdf-2ff6-4291-a772-021962964e88
     build:
-      context: ./services/service-d38e40e5-8f1e-4ec9-9d3b-980fc4ece463
-      dockerfile: Dockerfile
+      context: ./services/service-e3153fdf-2ff6-4291-a772-021962964e88
+      dockerfile: ../../dockerfiles/Dockerfile.e3153fdf-2ff6-4291-a772-021962964e88
     ports:
-      - 45043:3000
+      - 45356:3000
+    environment:
+      SERVICE_NAME: juddd
+      SERVICE_TYPE: roble
+      TABLE_NAME: microservices
+    restart: unless-stopped
+    networks:
+      - microservices-network
+  06338fc5-34a0-4b23-9e84-96f00574627c:
+    container_name: microservice-06338fc5-34a0-4b23-9e84-96f00574627c
+    build:
+      context: ./services/service-06338fc5-34a0-4b23-9e84-96f00574627c
+      dockerfile: ../../dockerfiles/Dockerfile.06338fc5-34a0-4b23-9e84-96f00574627c
+    ports:
+      - 45614:3000
     environment:
       SERVICE_NAME: prueba roble
       SERVICE_TYPE: roble
       TABLE_NAME: microservices
-      ROBLE_PROJECT: micro_services
-      ROBLE_TOKEN: micro_services_b5fd2708be
     restart: unless-stopped
     networks:
       - microservices-network
-
 networks:
   microservices-network:
     driver: bridge

@@ -43,7 +43,7 @@ class RobleClient:
     
     def _authenticate_with_credentials(self):
         """Autenticar usando email y password"""
-        auth_url = f"{self.base_url}/auth/login"
+        auth_url = f"{self.base_url}/auth/{self.contract}/login"
         auth_data = {
             "email": self._email,
             "password": self._password
@@ -169,9 +169,9 @@ roble = RobleClient(ROBLE_BASE_URL, ROBLE_CONTRACT)
 def home():
     return jsonify({
         "message": "Roble Service ready",
-        "serviceId": "5bb40d2f-3c00-480b-939e-94b5d74aaa86",
+        "serviceId": "e1208190-d415-4f62-90bf-d55626ed16d2",
         "tableName": TABLE_NAME,
-        "endpoint": f"http://localhost:3000/5bb40d2f-3c00-480b-939e-94b5d74aaa86",
+        "endpoint": f"http://localhost:3000/e1208190-d415-4f62-90bf-d55626ed16d2",
         "status": "running"
     })
 
@@ -205,8 +205,13 @@ def execute():
             return roble.delete_record(TABLE_NAME, '_id', record_id)
         
         # Ejecutar el código personalizado del usuario
-        def hola():
-            return "hola"
+        def main():
+            records = read_data()
+            return {
+                "message": "Roble microservice executed successfully",
+                "records_count": len(records),
+                "status": "completed"
+            }
         
         # Si el código define una función, ejecutarla automáticamente
         result = "Execution completed"

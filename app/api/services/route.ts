@@ -18,7 +18,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-  const { name, description, language, code, type, tableName, robleProjectName, robleToken } = body
+  const { name, description, language, code, type, tableName, robleContract, robleEmail, roblePassword, robleToken, robleMode } = body
 
     // Validation
     if (!name || typeof name !== "string") {
@@ -41,11 +41,20 @@ export async function POST(request: Request) {
       if (!tableName || typeof tableName !== "string") {
         return NextResponse.json({ error: "Table name is required for Roble services" }, { status: 400 })
       }
-      if (!robleProjectName || typeof robleProjectName !== "string") {
-        return NextResponse.json({ error: "Roble project name is required for Roble services" }, { status: 400 })
-      }
-      if (!robleToken || typeof robleToken !== "string") {
-        return NextResponse.json({ error: "Roble token is required for Roble services" }, { status: 400 })
+      
+      // Validate based on robleMode
+      if (robleMode === "different") {
+        if (!robleContract || typeof robleContract !== "string") {
+          return NextResponse.json({ error: "Roble contract is required for different project mode" }, { status: 400 })
+        }
+        
+        // Require either token OR (email + password)
+        const hasToken = robleToken && typeof robleToken === "string"
+        const hasCredentials = robleEmail && typeof robleEmail === "string" && roblePassword && typeof roblePassword === "string"
+        
+        if (!hasToken && !hasCredentials) {
+          return NextResponse.json({ error: "Either Roble token or email/password is required for different project mode" }, { status: 400 })
+        }
       }
     }
 
@@ -64,8 +73,11 @@ export async function POST(request: Request) {
       code,
       type: type as any,
       tableName: type === "roble" ? tableName : undefined,
-      robleProjectName: type === "roble" ? robleProjectName : undefined,
+      robleContract: type === "roble" ? robleContract : undefined,
+      robleEmail: type === "roble" ? robleEmail : undefined,
+      roblePassword: type === "roble" ? roblePassword : undefined,
       robleToken: type === "roble" ? robleToken : undefined,
+      robleMode: type === "roble" ? robleMode : undefined,
       createdAt: new Date(),
     }
 

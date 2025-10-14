@@ -8,7 +8,10 @@ export interface Microservice {
   // New: table name for Roble-backed services
   tableName?: string
   // Roble specific fields
-  robleProjectName?: string
+  robleContract?: string
+  robleEmail?: string
+  roblePassword?: string
   robleToken?: string
+  robleMode?: "current" | "different"
   createdAt: Date
 }

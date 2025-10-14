@@ -2,6 +2,9 @@ import type { Microservice } from "@/lib/types/microservice"
 import { robleClient } from "@/lib/backend/roble-client"
 import { createLogger } from "@/lib/backend/logger"
 import { generateServiceFiles } from "@/lib/docker/dockerfile-generator"
+import * as fs from "fs/promises"
+import * as path from "path"
+import { spawn } from "child_process"
 
 export type ContainerStatus = "starting" | "running" | "stopped" | "error"
 
@@ -13,6 +16,7 @@ export interface ContainerInfo {
 	startedAt: string | null
 	stoppedAt: string | null
 	error: string | null
+	process?: any // Child process for cleanup
 }
 
 // Fake container manager for demo purposes. Replace with real Docker control if needed.
@@ -92,7 +96,22 @@ class ContainerManager {
 
 	getContainerInfo(serviceId: string): ContainerInfo | undefined {
 		// Return current state without async sync to avoid blocking
-		return this.containers.get(serviceId)
+		const containerInfo = this.containers.get(serviceId)
+		
+		// If no container info exists, return a default stopped state
+		if (!containerInfo) {
+			return {
+				serviceId,
+				status: "stopped",
+				endpoint: null,
+				port: null,
+				startedAt: null,
+				stoppedAt: null,
+				error: null,
+			}
+		}
+		
+		return containerInfo
 	}
 
 	async forceSyncAllContainers(): Promise<void> {
@@ -221,12 +240,99 @@ class ContainerManager {
 			await new Promise((r) => setTimeout(r, 200))
 			// Standardize endpoint for all services to http://localhost:3000/{id}
 			if (service.type === "roble" && service.tableName) {
-				// Even when delegating to Roble, expose a local status/endpoint path
-				const res = await robleClient.runService(service, service.robleToken || "")
-				if (res.jobId) this.robleJobs.set(service.id, res.jobId)
-				info.status = "running"
-				info.endpoint = `http://localhost:3000/${service.id}`
-				info.port = null
+				// For Roble services, we need to start the actual generated server
+				// even in simulated mode, because the server contains the Roble integration
+				this.log.info("🚀 Iniciando servidor Roble generado...")
+				
+				// Generate and save the service files
+				const files = generateServiceFiles(service)
+				const serviceDir = path.join(process.cwd(), "services", `service-${service.id}`)
+				await fs.mkdir(serviceDir, { recursive: true })
+				
+				// Always regenerate the files to ensure they are up to date
+				this.log.info("🔄 Regenerando archivos del servidor...")
+				
+				if (service.language === "python") {
+					await fs.writeFile(path.join(serviceDir, "main.py"), files.code, "utf8")
+					await fs.writeFile(path.join(serviceDir, "requirements.txt"), files.dependencies, "utf8")
+					this.log.info("✅ Archivos Python regenerados")
+					
+					// Start the Python server on a different port
+					const servicePort = 3000 + parseInt(service.id.slice(-4), 16) % 1000 + 1000
+					this.log.info(`🐍 Ejecutando servidor Python en puerto ${servicePort}...`)
+					
+					// Start the server process
+					const serverProcess = spawn('python', ['main.py'], {
+						cwd: serviceDir,
+						env: { ...process.env, PORT: servicePort.toString() },
+						detached: false
+					})
+					
+					// Store the process for cleanup
+					this.containers.set(service.id, {
+						...info,
+						status: "running",
+						endpoint: `http://localhost:${servicePort}`,
+						port: servicePort,
+						process: serverProcess
+					})
+					
+					serverProcess.on('error', (error) => {
+						this.log.error(`❌ Error ejecutando servidor Python:`, error)
+					})
+					
+					serverProcess.on('exit', (code) => {
+						this.log.info(`🔚 Servidor Python terminado con código ${code}`)
+					})
+					
+					// Wait a bit for the server to start
+					await new Promise((r) => setTimeout(r, 1000))
+					
+					this.log.info("✅ Servidor Roble ejecutándose")
+					info.status = "running"
+					info.endpoint = `http://localhost:${servicePort}`
+					info.port = servicePort
+				} else {
+					await fs.writeFile(path.join(serviceDir, "index.js"), files.code, "utf8")
+					await fs.writeFile(path.join(serviceDir, "package.json"), files.dependencies, "utf8")
+					this.log.info("✅ Archivos JavaScript regenerados")
+					
+					// Start the Node.js server on a different port
+					const servicePort = 3000 + parseInt(service.id.slice(-4), 16) % 1000 + 1000
+					this.log.info(`🟢 Ejecutando servidor Node.js en puerto ${servicePort}...`)
+					
+					// Start the server process
+					const serverProcess = spawn('node', ['index.js'], {
+						cwd: serviceDir,
+						env: { ...process.env, PORT: servicePort.toString() },
+						detached: false
+					})
+					
+					// Store the process for cleanup
+					this.containers.set(service.id, {
+						...info,
+						status: "running",
+						endpoint: `http://localhost:${servicePort}`,
+						port: servicePort,
+						process: serverProcess
+					})
+					
+					serverProcess.on('error', (error) => {
+						this.log.error(`❌ Error ejecutando servidor Node.js:`, error)
+					})
+					
+					serverProcess.on('exit', (code) => {
+						this.log.info(`🔚 Servidor Node.js terminado con código ${code}`)
+					})
+					
+					// Wait a bit for the server to start
+					await new Promise((r) => setTimeout(r, 1000))
+					
+					this.log.info("✅ Servidor Roble ejecutándose")
+					info.status = "running"
+					info.endpoint = `http://localhost:${servicePort}`
+					info.port = servicePort
+				}
 			} else {
 				info.status = "running"
 				info.endpoint = endpointPath
@@ -288,6 +394,20 @@ class ContainerManager {
 				pack.entry({ name: "index.js" }, files.code)
 				pack.entry({ name: "package.json" }, files.dependencies)
 			}
+			
+			// Guardar archivos físicos también en modo Docker para que se puedan ver
+			const serviceDir = path.join(process.cwd(), "services", `service-${service.id}`)
+			await fs.mkdir(serviceDir, { recursive: true })
+			
+			if (service.language === "python") {
+				await fs.writeFile(path.join(serviceDir, "main.py"), files.code, "utf8")
+				await fs.writeFile(path.join(serviceDir, "requirements.txt"), files.dependencies, "utf8")
+			} else {
+				await fs.writeFile(path.join(serviceDir, "index.js"), files.code, "utf8")
+				await fs.writeFile(path.join(serviceDir, "package.json"), files.dependencies, "utf8")
+			}
+			
+			this.log.info("✅ Archivos físicos guardados para modo Docker")
 			pack.finalize()
 			// lazy-load dockerode
 			const dockerMod = await import("dockerode")
@@ -324,8 +444,15 @@ class ContainerManager {
 			const binds: string[] = []
 			const env: string[] = []
 			if (service.type === "roble" && service.tableName) env.push(`TABLE_NAME=${service.tableName}`)
-			if (service.type === "roble" && service.robleProjectName) env.push(`ROBLE_PROJECT=${service.robleProjectName}`)
+			if (service.type === "roble" && service.robleContract) env.push(`ROBLE_CONTRACT=${service.robleContract}`)
 			if (service.type === "roble" && service.robleToken) env.push(`ROBLE_TOKEN=${service.robleToken}`)
+			
+			// Pasar variables de entorno globales de Roble
+			if (service.type === "roble") {
+				if (process.env.ROBLE_USER_EMAIL) env.push(`ROBLE_USER_EMAIL=${process.env.ROBLE_USER_EMAIL}`)
+				if (process.env.ROBLE_USER_PASSWORD) env.push(`ROBLE_USER_PASSWORD=${process.env.ROBLE_USER_PASSWORD}`)
+				if (process.env.ROBLE_BASE_HOST) env.push(`ROBLE_BASE_HOST=${process.env.ROBLE_BASE_HOST}`)
+			}
 			const created = await this.docker.createContainer({
 				name: containerName,
 				Image: `microservice-${service.id}:latest`,
@@ -411,6 +538,53 @@ class ContainerManager {
 		let hash = 0
 		for (let i = 0; i < serviceId.length; i++) hash = (hash * 31 + serviceId.charCodeAt(i)) >>> 0
 		return this.basePort + (hash % 1000)
+	}
+	
+	/**
+	 * Limpiar contenedores huérfanos que no están en el estado interno
+	 */
+	async cleanupOrphanedContainers(): Promise<void> {
+		if (!this.docker) return
+		
+		try {
+			this.log.info("🧹 Limpiando contenedores huérfanos...")
+			
+			// Obtener todos los contenedores microservice
+			const containers = await this.docker.listContainers({ all: true })
+			const microserviceContainers = containers.filter((c: any) => 
+				c.Names.some((name: string) => name.includes('microservice-'))
+			)
+			
+			// Obtener IDs de servicios activos
+			const activeServiceIds = Array.from(this.containers.keys())
+			
+			// Encontrar contenedores huérfanos
+			const orphanedContainers = microserviceContainers.filter((c: any) => {
+				const containerName = c.Names[0].replace('/', '')
+				const serviceId = containerName.replace('microservice-', '')
+				return !activeServiceIds.includes(serviceId)
+			})
+			
+			if (orphanedContainers.length > 0) {
+				this.log.info(`🗑️ Encontrados ${orphanedContainers.length} contenedores huérfanos`)
+				
+				for (const container of orphanedContainers) {
+					try {
+						const containerObj = this.docker.getContainer(container.Id)
+						await containerObj.stop()
+						await containerObj.remove()
+						this.log.info(`✅ Contenedor huérfano eliminado: ${container.Names[0]}`)
+					} catch (error) {
+						this.log.warn(`⚠️ Error eliminando contenedor huérfano ${container.Names[0]}:`, { error: String(error) })
+					}
+				}
+			} else {
+				this.log.info("✅ No se encontraron contenedores huérfanos")
+			}
+			
+		} catch (error) {
+			this.log.error("❌ Error limpiando contenedores huérfanos:", { error: String(error) })
+		}
 	}
 }
 

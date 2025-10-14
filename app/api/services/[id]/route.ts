@@ -24,7 +24,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   try {
     const { id } = await params
     const body = await request.json()
-  const { name, description, language, code, type, tableName, robleProjectName, robleToken } = body
+  const { name, description, language, code, type, tableName, robleContract, robleEmail, roblePassword, robleToken, robleMode } = body
 
     // Validation
     if (name !== undefined && typeof name !== "string") {
@@ -46,11 +46,20 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       if (tableName !== undefined && typeof tableName !== "string") {
         return NextResponse.json({ error: "Invalid table name" }, { status: 400 })
       }
-      if (robleProjectName !== undefined && typeof robleProjectName !== "string") {
-        return NextResponse.json({ error: "Invalid Roble project name" }, { status: 400 })
+      if (robleContract !== undefined && typeof robleContract !== "string") {
+        return NextResponse.json({ error: "Invalid Roble contract" }, { status: 400 })
+      }
+      if (robleEmail !== undefined && typeof robleEmail !== "string") {
+        return NextResponse.json({ error: "Invalid Roble email" }, { status: 400 })
+      }
+      if (roblePassword !== undefined && typeof roblePassword !== "string") {
+        return NextResponse.json({ error: "Invalid Roble password" }, { status: 400 })
       }
       if (robleToken !== undefined && typeof robleToken !== "string") {
         return NextResponse.json({ error: "Invalid Roble token" }, { status: 400 })
+      }
+      if (robleMode !== undefined && !["current", "different"].includes(robleMode)) {
+        return NextResponse.json({ error: "Invalid Roble mode" }, { status: 400 })
       }
     }
 
@@ -75,18 +84,24 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       code: string
       type: "execution" | "roble"
       tableName?: string
-      robleProjectName?: string
+      robleContract?: string
+      robleEmail?: string
+      roblePassword?: string
       robleToken?: string
+      robleMode?: "current" | "different"
     }> = {}
 
     if (name !== undefined) updates.name = name
     if (description !== undefined) updates.description = description
-  if (language !== undefined) updates.language = language as "python" | "javascript"
+    if (language !== undefined) updates.language = language as "python" | "javascript"
     if (code !== undefined) updates.code = code
-  if (type !== undefined) updates.type = type as "execution" | "roble"
-  if (tableName !== undefined) updates.tableName = tableName
-  if (robleProjectName !== undefined) updates.robleProjectName = robleProjectName
-  if (robleToken !== undefined) updates.robleToken = robleToken
+    if (type !== undefined) updates.type = type as "execution" | "roble"
+    if (tableName !== undefined) updates.tableName = tableName
+    if (robleContract !== undefined) updates.robleContract = robleContract
+    if (robleEmail !== undefined) updates.robleEmail = robleEmail
+    if (roblePassword !== undefined) updates.roblePassword = roblePassword
+    if (robleToken !== undefined) updates.robleToken = robleToken
+    if (robleMode !== undefined) updates.robleMode = robleMode as "current" | "different"
 
     const updatedService = servicesStore.update(id, updates)
 

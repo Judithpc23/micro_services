@@ -1,59 +1,5 @@
 [
   {
-    "id": "0c88c135-2276-4685-a2e0-5b7dff83b135",
-    "name": "test",
-    "description": "papapappapapa",
-    "language": "python",
-    "code": "def imprime():\n     return \"h\"",
-    "type": "execution",
-    "createdAt": "2025-10-13T02:31:15.380Z"
-  },
-  {
-    "id": "a3d8abd4-f7e5-4f60-b999-e4c97834140a",
-    "name": "dasdasd",
-    "description": "dasdasdas",
-    "language": "python",
-    "code": "def imprime():\n     return \"h\"",
-    "type": "execution",
-    "createdAt": "2025-10-13T02:33:46.168Z"
-  },
-  {
-    "id": "b8768c0a-83f6-418f-9897-5645e3f2b303",
-    "name": "dadsaddsadasd",
-    "description": "dadada",
-    "language": "python",
-    "code": "def imprime():\n     return \"h\"",
-    "type": "execution",
-    "createdAt": "2025-10-13T02:37:16.217Z"
-  },
-  {
-    "id": "7f041e79-a027-4be4-aa90-9ecc9441a1b7",
-    "name": "fsfsdfsdf",
-    "description": "fdsfdfsfd",
-    "language": "python",
-    "code": "def imprime():\n     return \"h\"",
-    "type": "execution",
-    "createdAt": "2025-10-13T02:41:47.978Z"
-  },
-  {
-    "id": "facc5d66-acfa-4113-a068-66ab6421da4f",
-    "name": "cscscsc",
-    "description": "dasdadsad",
-    "language": "python",
-    "code": "def imprime():\n     return \"h\"",
-    "type": "execution",
-    "createdAt": "2025-10-13T02:49:20.728Z"
-  },
-  {
-    "id": "f093e106-fb4e-4dba-9b3b-7c0df6c69944",
-    "name": "fdsfsfsd",
-    "description": "vvxvsvsdvdv",
-    "language": "python",
-    "code": "def imprime():\n     return \"h\"",
-    "type": "execution",
-    "createdAt": "2025-10-13T02:50:16.398Z"
-  },
-  {
     "id": "5bb40d2f-3c00-480b-939e-94b5d74aaa86",
     "name": "hola",
     "description": "dadadad",
@@ -64,36 +10,36 @@
     "createdAt": "2025-10-13T04:46:44.195Z"
   },
   {
-    "id": "e8a4f62e-5617-4a05-8f45-82829f5e1d31",
-    "name": "dadsad",
-    "description": "addasdsa",
+    "id": "e1208190-d415-4f62-90bf-d55626ed16d2",
+    "name": "dddd",
+    "description": "ssss",
     "language": "python",
-    "code": "dsadads",
-    "type": "execution",
-    "createdAt": "2025-10-13T04:48:06.318Z"
-  },
-  {
-    "id": "967332c7-d0db-48e2-ab21-15c56f69369b",
-    "name": "dsadas",
-    "description": "dsadasdda",
-    "language": "python",
-    "code": "adsdasdasdas",
-    "type": "roble",
-    "tableName": "dsadasd",
-    "robleProjectName": "adsadas",
-    "robleToken": "dasdasdas",
-    "createdAt": "2025-10-13T06:03:37.702Z"
-  },
-  {
-    "id": "d38e40e5-8f1e-4ec9-9d3b-980fc4ece463",
-    "name": "prueba roble",
-    "description": "esperemos que funcione... la fe mueve montañas.",
-    "language": "python",
-    "code": "def imprime():\n     return \"h\"",
+    "code": "def main():\n    records = read_data()\n    return {\n        \"message\": \"Roble microservice executed successfully\",\n        \"records_count\": len(records),\n        \"status\": \"completed\"\n    }",
     "type": "roble",
     "tableName": "microservices",
-    "robleProjectName": "micro_services",
-    "robleToken": "micro_services_b5fd2708be",
-    "createdAt": "2025-10-14T02:26:47.132Z"
+    "robleMode": "current",
+    "createdAt": "2025-10-14T07:29:21.929Z"
+  },
+  {
+    "id": "e3153fdf-2ff6-4291-a772-021962964e88",
+    "name": "juddd",
+    "description": "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+    "language": "javascript",
+    "code": "// Roble Microservice - JavaScript\n// This service can interact with your Roble database\n\nasync function main() {\n    try {\n        // Example: Read all records from the table\n        const records = await readData();\n        console.log(`Found ${records.length} records`);\n        \n        // Process the records as needed\n        for (const record of records) {\n            console.log(`Record ID: ${record._id}`);\n            console.log('Data:', record);\n        }\n        \n        return {\n            message: 'Roble microservice executed successfully',\n            recordsCount: records.length,\n            status: 'completed'\n        };\n    } catch (error) {\n        console.error('Error in microservice:', error);\n        return {\n            message: 'Error executing microservice',\n            error: error.message,\n            status: 'error'\n        };\n    }\n}\n\n// Available helper functions:\n// - readData(filters): Read records from the table\n// - insertData(records): Insert new records  \n// - updateData(recordId, updates): Update a specific record\n// - deleteData(recordId): Delete a specific record",
+    "type": "roble",
+    "tableName": "microservices",
+    "robleMode": "current",
+    "createdAt": "2025-10-14T07:39:44.782Z"
+  },
+  {
+    "id": "06338fc5-34a0-4b23-9e84-96f00574627c",
+    "name": "prueba roble",
+    "description": "kkkkkkkkkkkkkkkkkkkk",
+    "language": "python",
+    "code": "# Roble Microservice - Python\n# This service can interact with your Roble database\n\ndef main():\n    # Example: Read all records from the table\n    records = read_data()\n    print(f\"Found {len(records)} records\")\n    \n    # Process the records as needed\n    for record in records:\n        print(f\"Record ID: {record.get('_id')}\")\n        print(f\"Data: {record}\")\n    \n    return {\n        \"message\": \"Roble microservice executed successfully\",\n        \"records_count\": len(records),\n        \"status\": \"completed\"\n    }\n\n# Available helper functions:\n# - read_data(filters=None): Read records from the table\n# - insert_data(records): Insert new records\n# - update_data(record_id, updates): Update a specific record\n# - delete_data(record_id): Delete a specific record",
+    "type": "roble",
+    "tableName": "microservices",
+    "robleMode": "current",
+    "createdAt": "2025-10-14T13:27:35.662Z"
   }
 ]

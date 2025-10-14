@@ -1,6 +1,6 @@
-# Dockerfile for dasdasd
+# Dockerfile for dddd
 # Language: Python
-# Type: execution
+# Type: roble
 # Optimized with dependency caching
 
 FROM python:3.11-slim
@@ -10,9 +10,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 		PYTHONUNBUFFERED=1 \
 		HOST=0.0.0.0 \
 		PORT=3000 \
-		SERVICE_NAME="dasdasd" \
-    SERVICE_TYPE="execution"
-# No Roble table configured
+		SERVICE_NAME="dddd" \
+    SERVICE_TYPE="roble"
+ENV ROBLE_TABLE_NAME="microservices"
 # No Roble project configured
 # No Roble token configured
 

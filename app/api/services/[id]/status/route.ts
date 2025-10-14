@@ -17,15 +17,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     return NextResponse.json({
       serviceId: id,
       serviceName: service.name,
-      container: containerInfo || {
-        serviceId: id,
-        status: "stopped",
-        endpoint: null,
-        port: null,
-        startedAt: null,
-        stoppedAt: null,
-        error: null,
-      },
+      container: containerInfo,
     })
   } catch (error) {
     console.error("Error getting service status:", error)

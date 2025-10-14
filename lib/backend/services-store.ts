@@ -71,8 +71,11 @@ class ServicesStore {
 			code: service.code,
 			type: service.type,
 			tableName: service.tableName,
-			robleProjectName: service.robleProjectName,
+			robleContract: service.robleContract,
+			robleEmail: service.robleEmail,
+			roblePassword: service.roblePassword,
 			robleToken: service.robleToken,
+			robleMode: service.robleMode,
 			status: status,
 			createAt: service.createdAt.toISOString(),
 			updatedAt: new Date().toISOString()
@@ -447,10 +450,17 @@ class ServicesStore {
 		this.store.set(id, updated)
 		this.scheduleWrite()
 		
-		// Regenerar Dockerfile físico (asíncrono, no bloquea)
-		this.generatePhysicalDockerfile(updated).catch(error => {
-			this.log.warn(`Failed to regenerate physical dockerfile for ${id}:`, error)
-		})
+		// Determinar si necesitamos regenerar archivos
+		const needsRegeneration = this.shouldRegenerateFiles(existing, updated)
+		
+		if (needsRegeneration) {
+			this.log.info(`🔄 Regenerando archivos para microservicio ${id} debido a cambios en configuración`)
+			
+			// Regenerar Dockerfile físico (asíncrono, no bloquea)
+			this.generatePhysicalDockerfile(updated).catch(error => {
+				this.log.warn(`Failed to regenerate physical dockerfile for ${id}:`, error)
+			})
+		}
 		
 		// Sincronizar con Roble (asíncrono, no bloquea)
 		this.syncUpdateToRoble(updated).catch(error => {
@@ -486,6 +496,34 @@ class ServicesStore {
 			})
 		}
 		return res
+	}
+
+	/**
+	 * Determinar si se necesitan regenerar archivos basado en los cambios
+	 */
+	private shouldRegenerateFiles(existing: Microservice, updated: Microservice): boolean {
+		// Campos que requieren regeneración de archivos
+		const regenerationFields = [
+			'language',
+			'code', 
+			'type',
+			'tableName',
+			'robleContract',
+			'robleEmail',
+			'roblePassword', 
+			'robleToken',
+			'robleMode'
+		]
+		
+		// Verificar si algún campo crítico cambió
+		for (const field of regenerationFields) {
+			if (existing[field as keyof Microservice] !== updated[field as keyof Microservice]) {
+				this.log.info(`🔄 Campo '${field}' cambió, se requiere regeneración`)
+				return true
+			}
+		}
+		
+		return false
 	}
 }
 // Persist instance across HMR in Next.js dev
