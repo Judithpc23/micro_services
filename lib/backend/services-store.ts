@@ -68,6 +68,9 @@ class ServicesStore {
 			language: service.language,
 			code: service.code,
 			type: service.type,
+			tableName: service.tableName,
+			robleProjectName: service.robleProjectName,
+			robleToken: service.robleToken,
 			status: status,
 			createAt: service.createdAt.toISOString(),
 			updatedAt: new Date().toISOString()

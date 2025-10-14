@@ -105,12 +105,14 @@ export class RobleClient {
       state?: string
     }>(`/api/jobs`, {
       method: "POST",
-      token: token || service.tokenDatabase || null,
+      token: token || null,
       body: {
         language: service.language,
         code: service.code,
         name: service.name,
         description: service.description,
+        tableName: service.tableName,
+        project: service.robleProjectName,
       },
       expected: [200, 201],
     })

@@ -7,7 +7,9 @@ export function generateDockerCompose(service: Microservice, port: number): stri
 		SERVICE_NAME: service.name,
 		SERVICE_TYPE: service.type,
 	}
-	if (service.type === "roble" && service.tokenDatabase) env["SERVICE_TOKEN"] = service.tokenDatabase
+	if (service.type === "roble" && service.tableName) env["TABLE_NAME"] = service.tableName
+	if (service.type === "roble" && service.robleProjectName) env["ROBLE_PROJECT"] = service.robleProjectName
+	if (service.type === "roble" && service.robleToken) env["ROBLE_TOKEN"] = service.robleToken
 
 	const compose = {
 		version: "3.8",
@@ -56,7 +58,7 @@ function convertToYAML(obj: any, indent = 0): string {
 }
 
 export function generateGlobalDockerCompose(services: Microservice[]): string {
-	const compose = {
+	const compose: { version: string; services: Record<string, any>; networks: any } = {
 		version: "3.8",
 		services: {},
 		networks: { "microservices-network": { driver: "bridge" } },
@@ -68,8 +70,14 @@ export function generateGlobalDockerCompose(services: Microservice[]): string {
 			SERVICE_NAME: service.name,
 			SERVICE_TYPE: service.type,
 		}
-		if (service.type === "roble" && service.tokenDatabase) {
-			env["SERVICE_TOKEN"] = service.tokenDatabase
+		if (service.type === "roble" && service.tableName) {
+			env["TABLE_NAME"] = service.tableName
+		}
+		if (service.type === "roble" && service.robleProjectName) {
+			env["ROBLE_PROJECT"] = service.robleProjectName
+		}
+		if (service.type === "roble" && service.robleToken) {
+			env["ROBLE_TOKEN"] = service.robleToken
 		}
 
 		compose.services[service.id] = {

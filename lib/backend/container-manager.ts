@@ -220,9 +220,9 @@ class ContainerManager {
 			this.log.info("Using simulated runtime")
 			await new Promise((r) => setTimeout(r, 200))
 			// Standardize endpoint for all services to http://localhost:3000/{id}
-			if (service.type === "roble" && service.tokenDatabase) {
+			if (service.type === "roble" && service.tableName) {
 				// Even when delegating to Roble, expose a local status/endpoint path
-				const res = await robleClient.runService(service, service.tokenDatabase)
+				const res = await robleClient.runService(service, service.robleToken || "")
 				if (res.jobId) this.robleJobs.set(service.id, res.jobId)
 				info.status = "running"
 				info.endpoint = `http://localhost:3000/${service.id}`
@@ -323,7 +323,9 @@ class ContainerManager {
 			// create & start container
 			const binds: string[] = []
 			const env: string[] = []
-			if (service.type === "roble" && service.tokenDatabase) env.push(`SERVICE_TOKEN=${service.tokenDatabase}`)
+			if (service.type === "roble" && service.tableName) env.push(`TABLE_NAME=${service.tableName}`)
+			if (service.type === "roble" && service.robleProjectName) env.push(`ROBLE_PROJECT=${service.robleProjectName}`)
+			if (service.type === "roble" && service.robleToken) env.push(`ROBLE_TOKEN=${service.robleToken}`)
 			const created = await this.docker.createContainer({
 				name: containerName,
 				Image: `microservice-${service.id}:latest`,

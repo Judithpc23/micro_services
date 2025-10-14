@@ -37,7 +37,9 @@ Plataforma educativa para crear, almacenar y ejecutar microservicios dinámicos 
 - language: "python" | "javascript"
 - code: string
 - type: "execution" | "roble"
-- tokenDatabase?: string  (requerido si `type === "roble"`)
+- tableName?: string  (requerido si `type === "roble"`)
+ - robleProjectName?: string (requerido si `type === "roble"`)
+ - robleToken?: string (requerido si `type === "roble"`)
 - createdAt: Date
 
 ## Endpoints
@@ -46,15 +48,15 @@ Plataforma educativa para crear, almacenar y ejecutar microservicios dinámicos 
 	- Respuesta: `Microservice[]`
 
 - POST `/api/services`
-	- Body: { name, description, language: "python"|"javascript", code, type: "execution"|"roble", tokenDatabase? }
-	- Si `type === "roble"`, `tokenDatabase` es obligatorio.
+	- Body: { name, description, language: "python"|"javascript", code, type: "execution"|"roble", tableName?, robleProjectName?, robleToken? }
+	- Si `type === "roble"`, `tableName`, `robleProjectName` y `robleToken` son obligatorios.
 	- Respuesta: `Microservice` creado
 
 - GET `/api/services/[id]`
 	- Respuesta: `Microservice`
 
 - PUT `/api/services/[id]`
-	- Body parcial: { name?, description?, language?, code?, type?, tokenDatabase? }
+	- Body parcial: { name?, description?, language?, code?, type?, tableName?, robleProjectName?, robleToken? }
 	- Respuesta: `Microservice` actualizado
 
 - DELETE `/api/services/[id]`
@@ -148,7 +150,7 @@ Pasos sugeridos:
 
 `POST /api/services/[id]/invoke` facilita el uso desde la UI: asegura que el servicio está corriendo y devuelve el endpoint sin duplicar lógica de arranque. La UI abre un diálogo para pegar parámetros / token.
 
-`lib/backend/container-manager.ts` ya delega a Roble cuando `service.type === "roble"` y existe `tokenDatabase`.
+`lib/backend/container-manager.ts` delega a Roble cuando `service.type === "roble"` y usa `tableName`.
 
 ## Cómo ejecutar
 

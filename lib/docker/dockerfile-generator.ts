@@ -15,7 +15,9 @@ export function generateDockerfile(service: Microservice): string {
 }
 
 function generatePythonDockerfile(service: Microservice): string {
-	const hasToken = service.type === "roble" && !!service.tokenDatabase
+    const hasTable = service.type === "roble" && !!service.tableName
+    const hasProject = service.type === "roble" && !!service.robleProjectName
+    const hasToken = service.type === "roble" && !!service.robleToken
 
 	return `# Dockerfile for ${service.name}
 # Language: Python
@@ -28,8 +30,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \\
 		HOST=0.0.0.0 \\
 		PORT=3000 \\
 		SERVICE_NAME="${service.name}" \\
-		SERVICE_TYPE="${service.type}"
-${hasToken ? `ENV ROBLE_TOKEN="${service.tokenDatabase}"` : "# No token required"}
+    SERVICE_TYPE="${service.type}"
+${hasTable ? `ENV ROBLE_TABLE_NAME="${service.tableName}"` : "# No Roble table configured"}
+${hasProject ? `ENV ROBLE_PROJECT="${service.robleProjectName}"` : "# No Roble project configured"}
+${hasToken ? `ENV ROBLE_TOKEN="${service.robleToken}"` : "# No Roble token configured"}
 
 WORKDIR /app
 
@@ -53,7 +57,9 @@ CMD ["python", "main.py"]
 }
 
 function generateJavaScriptDockerfile(service: Microservice): string {
-	const hasToken = service.type === "roble" && !!service.tokenDatabase
+    const hasTable = service.type === "roble" && !!service.tableName
+    const hasProject = service.type === "roble" && !!service.robleProjectName
+    const hasToken = service.type === "roble" && !!service.robleToken
 
 	return `# Dockerfile for ${service.name}
 # Language: JavaScript (Node.js)
@@ -65,8 +71,10 @@ ENV NODE_ENV=production \\
 		HOST=0.0.0.0 \\
 		PORT=3000 \\
 		SERVICE_NAME="${service.name}" \\
-		SERVICE_TYPE="${service.type}"
-${hasToken ? `ENV ROBLE_TOKEN="${service.tokenDatabase}"` : "# No token required"}
+    SERVICE_TYPE="${service.type}"
+${hasTable ? `ENV ROBLE_TABLE_NAME="${service.tableName}"` : "# No Roble table configured"}
+${hasProject ? `ENV ROBLE_PROJECT="${service.robleProjectName}"` : "# No Roble project configured"}
+${hasToken ? `ENV ROBLE_TOKEN="${service.robleToken}"` : "# No Roble token configured"}
 
 WORKDIR /app
 

@@ -30,7 +30,10 @@ export function CreateServiceForm({
   const [language, setLanguage] = useState<ServiceLanguage>("python")
   const [code, setCode] = useState("")
   const [type, setType] = useState<ServiceType>("execution")
-  const [tokenDatabase, setTokenDatabase] = useState("")
+  // UI field for Roble table name
+  const [tableName, setTableName] = useState("")
+  const [robleProjectName, setRobleProjectName] = useState("")
+  const [robleToken, setRobleToken] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
@@ -40,7 +43,10 @@ export function CreateServiceForm({
       setLanguage(editingService.language)
       setCode(editingService.code)
       setType(editingService.type)
-      setTokenDatabase(editingService.tokenDatabase || "")
+  // Prefill table name if present
+      setTableName(editingService.tableName || "")
+      setRobleProjectName(editingService.robleProjectName || "")
+      setRobleToken(editingService.robleToken || "")
     } else {
       // Reset form when not editing
       setName("")
@@ -48,7 +54,9 @@ export function CreateServiceForm({
       setCode("")
       setLanguage("python")
       setType("execution")
-      setTokenDatabase("")
+      setTableName("")
+      setRobleProjectName("")
+      setRobleToken("")
     }
   }, [editingService])
 
@@ -59,7 +67,8 @@ export function CreateServiceForm({
       return
     }
 
-    if (type === "roble" && !tokenDatabase) {
+    // For Roble services, table name, project name, and token are required
+    if (type === "roble" && (!tableName || !robleProjectName || !robleToken)) {
       return
     }
 
@@ -72,7 +81,9 @@ export function CreateServiceForm({
           language,
           code,
           type,
-          tokenDatabase: type === "roble" ? tokenDatabase : undefined,
+          tableName: type === "roble" ? tableName : undefined,
+          robleProjectName: type === "roble" ? robleProjectName : undefined,
+          robleToken: type === "roble" ? robleToken : undefined,
         })
       } else {
         await onCreateService({
@@ -81,7 +92,9 @@ export function CreateServiceForm({
           language,
           code,
           type,
-          tokenDatabase: type === "roble" ? tokenDatabase : undefined,
+          tableName: type === "roble" ? tableName : undefined,
+          robleProjectName: type === "roble" ? robleProjectName : undefined,
+          robleToken: type === "roble" ? robleToken : undefined,
         })
       }
 
@@ -92,7 +105,9 @@ export function CreateServiceForm({
         setCode("")
         setLanguage("python")
         setType("execution")
-        setTokenDatabase("")
+        setTableName("")
+        setRobleProjectName("")
+        setRobleToken("")
       }
     } finally {
       setIsSubmitting(false)
@@ -205,26 +220,60 @@ export function CreateServiceForm({
               </button>
             </div>
             <p className="text-xs text-muted-foreground">
-              {type === "roble" ? "Requires authentication token" : "Standard execution"}
+              {type === "roble" ? "Requires Roble table name, project and token" : "Standard execution"}
             </p>
           </div>
 
           {type === "roble" && (
             <div className="space-y-2">
-              <Label htmlFor="tokenDatabase">Database Token</Label>
+              <Label htmlFor="tableName">Table Name</Label>
               <Input
-                id="tokenDatabase"
-                type="password"
-                placeholder="Paste your database token here..."
-                value={tokenDatabase}
-                onChange={(e) => setTokenDatabase(e.target.value)}
+                id="tableName"
+                type="text"
+                placeholder="Enter the Roble table name, e.g. microservices"
+                value={tableName}
+                onChange={(e) => setTableName(e.target.value)}
                 required
                 disabled={isSubmitting}
                 className="bg-input border-border font-mono text-sm"
               />
               <p className="text-xs text-muted-foreground">
-                This token will be securely stored and used for database authentication
+                This will be used to target the table in Roble where records are managed
               </p>
+            </div>
+          )}
+
+          {type === "roble" && (
+            <div className="space-y-2">
+              <Label htmlFor="robleProjectName">Roble Project Name</Label>
+              <Input
+                id="robleProjectName"
+                type="text"
+                placeholder="Enter the Roble project name"
+                value={robleProjectName}
+                onChange={(e) => setRobleProjectName(e.target.value)}
+                required
+                disabled={isSubmitting}
+                className="bg-input border-border text-sm"
+              />
+              <p className="text-xs text-muted-foreground">Project/workspace name in Roble</p>
+            </div>
+          )}
+
+          {type === "roble" && (
+            <div className="space-y-2">
+              <Label htmlFor="robleToken">Roble Token</Label>
+              <Input
+                id="robleToken"
+                type="password"
+                placeholder="Paste the Roble access token"
+                value={robleToken}
+                onChange={(e) => setRobleToken(e.target.value)}
+                required
+                disabled={isSubmitting}
+                className="bg-input border-border font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">This token is used for Roble authorization</p>
             </div>
           )}
 

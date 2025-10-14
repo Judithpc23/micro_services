@@ -18,7 +18,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-  const { name, description, language, code, type, tokenDatabase } = body
+  const { name, description, language, code, type, tableName, robleProjectName, robleToken } = body
 
     // Validation
     if (!name || typeof name !== "string") {
@@ -36,8 +36,17 @@ export async function POST(request: Request) {
     if (!["execution", "roble"].includes(type)) {
       return NextResponse.json({ error: "Invalid service type" }, { status: 400 })
     }
-    if (type === "roble" && (!tokenDatabase || typeof tokenDatabase !== "string")) {
-      return NextResponse.json({ error: "Database token is required for Roble services" }, { status: 400 })
+    // Require tableName for Roble.
+    if (type === "roble") {
+      if (!tableName || typeof tableName !== "string") {
+        return NextResponse.json({ error: "Table name is required for Roble services" }, { status: 400 })
+      }
+      if (!robleProjectName || typeof robleProjectName !== "string") {
+        return NextResponse.json({ error: "Roble project name is required for Roble services" }, { status: 400 })
+      }
+      if (!robleToken || typeof robleToken !== "string") {
+        return NextResponse.json({ error: "Roble token is required for Roble services" }, { status: 400 })
+      }
     }
 
     // Unsafe code validation
@@ -54,7 +63,9 @@ export async function POST(request: Request) {
       language: language as any,
       code,
       type: type as any,
-      tokenDatabase: type === "roble" ? tokenDatabase : undefined,
+      tableName: type === "roble" ? tableName : undefined,
+      robleProjectName: type === "roble" ? robleProjectName : undefined,
+      robleToken: type === "roble" ? robleToken : undefined,
       createdAt: new Date(),
     }
 

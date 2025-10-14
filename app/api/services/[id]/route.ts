@@ -24,7 +24,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   try {
     const { id } = await params
     const body = await request.json()
-  const { name, description, language, code, type, tokenDatabase } = body
+  const { name, description, language, code, type, tableName, robleProjectName, robleToken } = body
 
     // Validation
     if (name !== undefined && typeof name !== "string") {
@@ -42,8 +42,16 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (type !== undefined && !["execution", "roble"].includes(type)) {
       return NextResponse.json({ error: "Invalid service type" }, { status: 400 })
     }
-    if (type === "roble" && tokenDatabase !== undefined && typeof tokenDatabase !== "string") {
-      return NextResponse.json({ error: "Invalid database token" }, { status: 400 })
+    if (type === "roble") {
+      if (tableName !== undefined && typeof tableName !== "string") {
+        return NextResponse.json({ error: "Invalid table name" }, { status: 400 })
+      }
+      if (robleProjectName !== undefined && typeof robleProjectName !== "string") {
+        return NextResponse.json({ error: "Invalid Roble project name" }, { status: 400 })
+      }
+      if (robleToken !== undefined && typeof robleToken !== "string") {
+        return NextResponse.json({ error: "Invalid Roble token" }, { status: 400 })
+      }
     }
 
     // If code or language is being updated, re-validate for unsafe patterns
@@ -66,7 +74,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       language: "python" | "javascript"
       code: string
       type: "execution" | "roble"
-      tokenDatabase?: string
+      tableName?: string
+      robleProjectName?: string
+      robleToken?: string
     }> = {}
 
     if (name !== undefined) updates.name = name
@@ -74,7 +84,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   if (language !== undefined) updates.language = language as "python" | "javascript"
     if (code !== undefined) updates.code = code
   if (type !== undefined) updates.type = type as "execution" | "roble"
-  if (tokenDatabase !== undefined) updates.tokenDatabase = tokenDatabase
+  if (tableName !== undefined) updates.tableName = tableName
+  if (robleProjectName !== undefined) updates.robleProjectName = robleProjectName
+  if (robleToken !== undefined) updates.robleToken = robleToken
 
     const updatedService = servicesStore.update(id, updates)
 

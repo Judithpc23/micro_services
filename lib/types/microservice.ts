@@ -5,6 +5,10 @@ export interface Microservice {
   language: "python" | "javascript"
   code: string
   type: "execution" | "roble"
-  tokenDatabase?: string
+  // New: table name for Roble-backed services
+  tableName?: string
+  // Roble specific fields
+  robleProjectName?: string
+  robleToken?: string
   createdAt: Date
 }
