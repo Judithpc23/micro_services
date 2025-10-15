@@ -1,6 +1,7 @@
 export interface CodeValidationInput {
   language: "python" | "javascript"
   code: string
+  serviceType?: "execution" | "roble"
 }
 
 export interface CodeValidationResult {
@@ -9,11 +10,11 @@ export interface CodeValidationResult {
 }
 
 export function validateServiceCode(input: CodeValidationInput): CodeValidationResult {
-  const { language, code } = input
+  const { language, code, serviceType } = input
   const reasons: string[] = []
   const source = code || ""
   
-  console.log("🔍 Validating code:", { language, code: source.substring(0, 100) })
+  console.log("🔍 Validating code:", { language, code: source.substring(0, 100), serviceType })
 
   if (language === "python") {
     // Allow safe web frameworks
@@ -31,7 +32,8 @@ export function validateServiceCode(input: CodeValidationInput): CodeValidationR
     const isSafeWebFramework = safePatterns.some(pattern => pattern.test(source))
     
     const patterns: Array<{ re: RegExp; reason: string }> = [
-      { re: /\bimport\s+os\b/i, reason: "Uso de 'os' no permitido" },
+      // Permitir 'os' para microservicios Roble (necesario para variables de entorno)
+      ...(serviceType === "roble" ? [] : [{ re: /\bimport\s+os\b/i, reason: "Uso de 'os' no permitido" }]),
       { re: /\bimport\s+subprocess\b/i, reason: "Uso de 'subprocess' no permitido" },
       { re: /\bos\.system\s*\(/i, reason: "Llamadas a os.system bloqueadas" },
       { re: /\bsubprocess\.(Popen|run|call)\s*\(/i, reason: "Ejecución de procesos bloqueada" },

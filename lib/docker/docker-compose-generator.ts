@@ -18,6 +18,7 @@ export function generateDockerCompose(service: Microservice, port: number): stri
 				build: { context: ".", dockerfile: `dockerfiles/Dockerfile.${service.id}` },
 				ports: [`${port}:${internalPort}`],
 				environment: env,
+				env_file: [".env.local"],
 				restart: "unless-stopped",
 				networks: ["microservices-network"],
 			},
@@ -83,6 +84,7 @@ export function generateGlobalDockerCompose(services: Microservice[]): string {
 			build: { context: `./services/service-${service.id}`, dockerfile: `../../dockerfiles/Dockerfile.${service.id}` },
 			ports: [`${port}:3000`],
 			environment: env,
+			env_file: [".env.local"],
 			restart: "unless-stopped",
 			networks: ["microservices-network"],
 		}

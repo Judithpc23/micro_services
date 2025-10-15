@@ -1,57 +1,17 @@
 services:
-  5bb40d2f-3c00-480b-939e-94b5d74aaa86:
-    container_name: microservice-5bb40d2f-3c00-480b-939e-94b5d74aaa86
+  88be4d2f-a722-45aa-8302-1849f16499a5:
+    container_name: microservice-88be4d2f-a722-45aa-8302-1849f16499a5
     build:
-      context: ./services/service-5bb40d2f-3c00-480b-939e-94b5d74aaa86
-      dockerfile: ../../dockerfiles/Dockerfile.5bb40d2f-3c00-480b-939e-94b5d74aaa86
+      context: ./services/service-88be4d2f-a722-45aa-8302-1849f16499a5
+      dockerfile: ../../dockerfiles/Dockerfile.88be4d2f-a722-45aa-8302-1849f16499a5
     ports:
-      - 45971:3000
-    environment:
-      SERVICE_NAME: hola
-      SERVICE_TYPE: roble
-      TABLE_NAME: microservices
-    restart: unless-stopped
-    networks:
-      - microservices-network
-  e1208190-d415-4f62-90bf-d55626ed16d2:
-    container_name: microservice-e1208190-d415-4f62-90bf-d55626ed16d2
-    build:
-      context: ./services/service-e1208190-d415-4f62-90bf-d55626ed16d2
-      dockerfile: ../../dockerfiles/Dockerfile.e1208190-d415-4f62-90bf-d55626ed16d2
-    ports:
-      - 45273:3000
-    environment:
-      SERVICE_NAME: dddd
-      SERVICE_TYPE: roble
-      TABLE_NAME: microservices
-    restart: unless-stopped
-    networks:
-      - microservices-network
-  e3153fdf-2ff6-4291-a772-021962964e88:
-    container_name: microservice-e3153fdf-2ff6-4291-a772-021962964e88
-    build:
-      context: ./services/service-e3153fdf-2ff6-4291-a772-021962964e88
-      dockerfile: ../../dockerfiles/Dockerfile.e3153fdf-2ff6-4291-a772-021962964e88
-    ports:
-      - 45356:3000
-    environment:
-      SERVICE_NAME: juddd
-      SERVICE_TYPE: roble
-      TABLE_NAME: microservices
-    restart: unless-stopped
-    networks:
-      - microservices-network
-  06338fc5-34a0-4b23-9e84-96f00574627c:
-    container_name: microservice-06338fc5-34a0-4b23-9e84-96f00574627c
-    build:
-      context: ./services/service-06338fc5-34a0-4b23-9e84-96f00574627c
-      dockerfile: ../../dockerfiles/Dockerfile.06338fc5-34a0-4b23-9e84-96f00574627c
-    ports:
-      - 45614:3000
+      - 45134:3000
     environment:
       SERVICE_NAME: prueba roble
       SERVICE_TYPE: roble
       TABLE_NAME: microservices
+    env_file:
+      - .env.local
     restart: unless-stopped
     networks:
       - microservices-network

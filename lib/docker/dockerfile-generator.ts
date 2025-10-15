@@ -15,12 +15,6 @@ export function generateDockerfile(service: Microservice): string {
 }
 
 function generatePythonDockerfile(service: Microservice): string {
-    const hasTable = service.type === "roble" && !!service.tableName
-    const hasContract = service.type === "roble" && !!service.robleContract
-    const hasToken = service.type === "roble" && !!service.robleToken
-    const hasEmail = service.type === "roble" && !!service.robleEmail
-    const hasPassword = service.type === "roble" && !!service.roblePassword
-
 	return `# Dockerfile for ${service.name}
 # Language: Python
 # Type: ${service.type}
@@ -28,18 +22,13 @@ function generatePythonDockerfile(service: Microservice): string {
 
 FROM python:3.11-slim
 
-# Set environment variables
+# Set environment variables (no secrets hardcoded)
 ENV PYTHONDONTWRITEBYTECODE=1 \\
 		PYTHONUNBUFFERED=1 \\
 		HOST=0.0.0.0 \\
 		PORT=3000 \\
 		SERVICE_NAME="${service.name}" \\
     SERVICE_TYPE="${service.type}"
-${hasTable ? `ENV ROBLE_TABLE_NAME="${service.tableName}"` : "# No Roble table configured"}
-${hasContract ? `ENV ROBLE_CONTRACT="${service.robleContract}"` : "# No Roble contract configured"}
-${hasToken ? `ENV ROBLE_TOKEN="${service.robleToken}"` : "# No Roble token configured"}
-${hasEmail ? `ENV ROBLE_USER_EMAIL="${service.robleEmail}"` : "# No Roble email configured"}
-${hasPassword ? `ENV ROBLE_USER_PASSWORD="${service.roblePassword}"` : "# No Roble password configured"}
 
 # Create non-root user for security
 RUN groupadd -r appuser && useradd -r -g appuser appuser
@@ -70,12 +59,6 @@ CMD ["python", "main.py"]
 }
 
 function generateJavaScriptDockerfile(service: Microservice): string {
-    const hasTable = service.type === "roble" && !!service.tableName
-    const hasContract = service.type === "roble" && !!service.robleContract
-    const hasToken = service.type === "roble" && !!service.robleToken
-    const hasEmail = service.type === "roble" && !!service.robleEmail
-    const hasPassword = service.type === "roble" && !!service.roblePassword
-
 	return `# Dockerfile for ${service.name}
 # Language: JavaScript (Node.js)
 # Type: ${service.type}
@@ -83,17 +66,12 @@ function generateJavaScriptDockerfile(service: Microservice): string {
 
 FROM node:18-alpine
 
-# Set environment variables
+# Set environment variables (no secrets hardcoded)
 ENV NODE_ENV=production \\
 		HOST=0.0.0.0 \\
 		PORT=3000 \\
 		SERVICE_NAME="${service.name}" \\
     SERVICE_TYPE="${service.type}"
-${hasTable ? `ENV ROBLE_TABLE_NAME="${service.tableName}"` : "# No Roble table configured"}
-${hasContract ? `ENV ROBLE_CONTRACT="${service.robleContract}"` : "# No Roble contract configured"}
-${hasToken ? `ENV ROBLE_TOKEN="${service.robleToken}"` : "# No Roble token configured"}
-${hasEmail ? `ENV ROBLE_USER_EMAIL="${service.robleEmail}"` : "# No Roble email configured"}
-${hasPassword ? `ENV ROBLE_USER_PASSWORD="${service.roblePassword}"` : "# No Roble password configured"}
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \\
@@ -147,10 +125,12 @@ export function generateServiceFiles(service: Microservice): {
 			? `# requirements.txt
 flask==3.0.0
 requests==2.31.0
+python-dotenv==1.0.0
 `
 			: `# requirements.txt
 flask==3.0.0
 requests==2.31.0
+python-dotenv==1.0.0
 `
 		
 		return {
@@ -332,10 +312,51 @@ import json
 
 app = Flask(__name__)
 
-# Configuración de Roble
-ROBLE_BASE_URL = os.getenv('ROBLE_BASE_HOST', 'https://roble-api.openlab.uninorte.edu.co')
-ROBLE_CONTRACT = os.getenv('ROBLE_CONTRACT', '${service.robleContract || ""}')
-TABLE_NAME = '${service.tableName}'
+# Cargar variables de entorno usando python-dotenv
+from dotenv import load_dotenv
+
+# Cargar automáticamente desde .env.local (prioridad) o .env
+load_dotenv('.env.local')  # Intenta cargar .env.local primero
+load_dotenv('.env')         # Fallback a .env si .env.local no existe
+load_dotenv()               # Fallback a archivo .env en directorio actual
+
+print("✅ Variables de entorno cargadas con python-dotenv")
+
+# Configuración de Roble con validación
+def get_required_env(key: str, description: str = None) -> str:
+    """Obtener variable de entorno requerida con validación"""
+    value = os.getenv(key)
+    if not value:
+        error_msg = f"Variable de entorno requerida no encontrada: {key}"
+        if description:
+            error_msg += f" ({description})"
+        raise ValueError(error_msg)
+    return value
+
+def get_optional_env(key: str, default: str = None) -> str:
+    """Obtener variable de entorno opcional"""
+    return os.getenv(key, default)
+
+# Cargar configuración con validación
+try:
+    ROBLE_BASE_URL = get_required_env('ROBLE_BASE_HOST', 'URL base de la API de Roble')
+    ROBLE_CONTRACT = get_required_env('ROBLE_CONTRACT', 'Contrato de Roble')
+    TABLE_NAME = get_required_env('TABLE_NAME', 'Nombre de la tabla')
+    ROBLE_USER_EMAIL = get_optional_env('ROBLE_USER_EMAIL')
+    ROBLE_USER_PASSWORD = get_optional_env('ROBLE_USER_PASSWORD')
+    ROBLE_TOKEN = get_optional_env('ROBLE_TOKEN')
+    ROBLE_MODE = get_optional_env('ROBLE_MODE', 'current')
+    
+    print(f"✅ Configuración Roble cargada:")
+    print(f"   - Base URL: {ROBLE_BASE_URL}")
+    print(f"   - Contract: {ROBLE_CONTRACT}")
+    print(f"   - Table: {TABLE_NAME}")
+    print(f"   - Mode: {ROBLE_MODE}")
+    
+except ValueError as e:
+    print(f"❌ Error de configuración: {e}")
+    print("💡 Asegúrate de tener las variables requeridas en .env.local")
+    raise
 
 # Cliente Roble para operaciones de base de datos
 class RobleClient:
@@ -344,9 +365,9 @@ class RobleClient:
         self.contract = contract
         self.database_url = f"{base_url}/database/{contract}"
         self._token = None
-        self._email = os.getenv('ROBLE_USER_EMAIL', '${service.robleEmail || ""}')
-        self._password = os.getenv('ROBLE_USER_PASSWORD', '${service.roblePassword || ""}')
-        self._roble_mode = '${service.robleMode || "current"}'
+        self._email = ROBLE_USER_EMAIL
+        self._password = ROBLE_USER_PASSWORD
+        self._roble_mode = ROBLE_MODE
     
     def _get_token(self):
         """Obtener token de autenticación, renovando si es necesario"""
@@ -359,7 +380,7 @@ class RobleClient:
                 return self._authenticate_with_credentials()
         else:
             # Para modo 'different', usar token directo o credenciales del servicio
-            direct_token = os.getenv('ROBLE_TOKEN', '${service.robleToken || ""}')
+            direct_token = ROBLE_TOKEN
             if direct_token:
                 self._token = direct_token
                 return self._token
@@ -370,20 +391,32 @@ class RobleClient:
     
     def _authenticate_with_credentials(self):
         """Autenticar usando email y password"""
+        # Verificar que el contract no esté vacío
+        if not self.contract or self.contract.strip() == "":
+            raise Exception("ROBLE_CONTRACT no está configurado")
+        
         auth_url = f"{self.base_url}/auth/{self.contract}/login"
         auth_data = {
             "email": self._email,
             "password": self._password
         }
         
+        # Debug: imprimir la URL
+        print(f"DEBUG: Intentando autenticar en: {auth_url}")
+        print(f"DEBUG: Email: {self._email}")
+        print(f"DEBUG: Password configurado: {bool(self._password)}")
+        
         try:
             response = requests.post(auth_url, json=auth_data)
+            print(f"DEBUG: Response status: {response.status_code}")
+            print(f"DEBUG: Response text: {response.text[:200]}")
+            
             if response.ok:
                 auth_result = response.json()
                 self._token = auth_result.get('accessToken')
                 return self._token
             else:
-                raise Exception(f"Error de autenticación: {response.status_code}")
+                raise Exception(f"Error de autenticación: {response.status_code} - {response.text}")
         except Exception as e:
             raise Exception(f"Error conectando con Roble: {str(e)}")
     
@@ -578,16 +611,53 @@ if __name__ == '__main__':
 function generateRobleExpressServer(service: Microservice): string {
     return `const express = require('express');
   const axios = require('axios');
+  require('dotenv').config({ path: '.env.local' }); // Cargar .env.local primero
+  require('dotenv').config(); // Fallback a .env
   
   const app = express();
   app.use(express.json());
   
   // =========================
-  // Config Roble
+  // Config Roble con validación
   // =========================
-  const ROBLE_BASE_URL = process.env.ROBLE_BASE_HOST || 'https://roble-api.openlab.uninorte.edu.co';
-  const DEFAULT_DBNAME = process.env.ROBLE_CONTRACT || '${service.robleContract || ''}';
-  const TABLE_NAME = process.env.ROBLE_TABLE_NAME || '${service.tableName || 'microservices'}';
+  function getRequiredEnv(key, description) {
+    const value = process.env[key];
+    if (!value) {
+      const errorMsg = \`Variable de entorno requerida no encontrada: \${key}\`;
+      const fullError = description ? \`\${errorMsg} (\${description})\` : errorMsg;
+      throw new Error(fullError);
+    }
+    return value;
+  }
+  
+  function getOptionalEnv(key, defaultValue = null) {
+    return process.env[key] || defaultValue;
+  }
+  
+  // Cargar configuración con validación
+  let ROBLE_BASE_URL, DEFAULT_DBNAME, TABLE_NAME, ROBLE_EMAIL, ROBLE_PASSWORD, ROBLE_TOKEN, ROBLE_MODE;
+  
+  try {
+    ROBLE_BASE_URL = getRequiredEnv('ROBLE_BASE_HOST', 'URL base de la API de Roble');
+    DEFAULT_DBNAME = getRequiredEnv('ROBLE_CONTRACT', 'Contrato de Roble');
+    TABLE_NAME = getRequiredEnv('TABLE_NAME', 'Nombre de la tabla');
+    ROBLE_EMAIL = getOptionalEnv('ROBLE_USER_EMAIL');
+    ROBLE_PASSWORD = getOptionalEnv('ROBLE_USER_PASSWORD');
+    ROBLE_TOKEN = getOptionalEnv('ROBLE_TOKEN');
+    ROBLE_MODE = getOptionalEnv('ROBLE_MODE', 'current');
+    
+    console.log('✅ Configuración Roble cargada:');
+    console.log(\`   - Base URL: \${ROBLE_BASE_URL}\`);
+    console.log(\`   - Contract: \${DEFAULT_DBNAME}\`);
+    console.log(\`   - Table: \${TABLE_NAME}\`);
+    console.log(\`   - Mode: \${ROBLE_MODE}\`);
+    
+  } catch (error) {
+    console.error(\`❌ Error de configuración: \${error.message}\`);
+    console.log('💡 Asegúrate de tener las variables requeridas en .env.local');
+    process.exit(1);
+  }
+  
   const HTTP_TIMEOUT = Number(process.env.HTTP_TIMEOUT || 5000); // ms
   
   // Axios base
@@ -600,17 +670,101 @@ function generateRobleExpressServer(service: Microservice): string {
   const DBNAME_RE = /^[A-Za-z0-9_-]{1,64}$/;
   
   // =========================
-  // Cliente Roble (token passthrough)
+  // Cliente Roble con autenticación automática
   // =========================
   class RobleClient {
-    constructor() {}
+    constructor() {
+      this._accessToken = null;
+      this._refreshToken = null;
+      this._tokenExpiry = null;
+    }
+    
+    async _authenticateWithCredentials() {
+      if (!ROBLE_EMAIL || !ROBLE_PASSWORD) {
+        throw new Error('ROBLE_USER_EMAIL y ROBLE_USER_PASSWORD no están configurados');
+      }
+      
+      const authUrl = \`/auth/\${DEFAULT_DBNAME}/login\`;
+      const authData = {
+        email: ROBLE_EMAIL,
+        password: ROBLE_PASSWORD
+      };
+      
+      console.log('DEBUG: Intentando autenticar en:', \`\${ROBLE_BASE_URL}\${authUrl}\`);
+      console.log('DEBUG: Email:', ROBLE_EMAIL);
+      
+      try {
+        const response = await http.post(authUrl, authData);
+        console.log('DEBUG: Response status:', response.status);
+        
+        if (response.ok) {
+          const authResult = response.data;
+          this._accessToken = authResult.accessToken;
+          this._refreshToken = authResult.refreshToken;
+          this._tokenExpiry = Date.now() + (24 * 60 * 60 * 1000); // 24 horas
+          return this._accessToken;
+        } else {
+          throw new Error(\`Error de autenticación: \${response.status} - \${response.data}\`);
+        }
+      } catch (error) {
+        throw new Error(\`Error conectando con Roble: \${error.message}\`);
+      }
+    }
+    
+    async _refreshAccessToken() {
+      if (!this._refreshToken) {
+        throw new Error('No hay refresh token disponible');
+      }
+      
+      const refreshUrl = \`/auth/\${DEFAULT_DBNAME}/refresh-token\`;
+      try {
+        const response = await http.post(refreshUrl, { refreshToken: this._refreshToken });
+        if (response.ok) {
+          const authResult = response.data;
+          this._accessToken = authResult.accessToken;
+          this._tokenExpiry = Date.now() + (24 * 60 * 60 * 1000);
+          return this._accessToken;
+        } else {
+          throw new Error(\`Error refrescando token: \${response.status}\`);
+        }
+      } catch (error) {
+        throw new Error(\`Error refrescando token: \${error.message}\`);
+      }
+    }
+    
+    async _ensureValidToken() {
+      // Si tenemos un token válido, usarlo
+      if (this._accessToken && this._tokenExpiry && Date.now() < this._tokenExpiry) {
+        return this._accessToken;
+      }
+      
+      // Si tenemos refresh token, intentar refrescar
+      if (this._refreshToken) {
+        try {
+          return await this._refreshAccessToken();
+        } catch (error) {
+          console.log('DEBUG: Error refrescando token, reautenticando:', error.message);
+        }
+      }
+      
+      // Si no, autenticar desde cero
+      return await this._authenticateWithCredentials();
+    }
+    
+    async getValidToken() {
+      if (ROBLE_TOKEN) {
+        return ROBLE_TOKEN;
+      }
+      return await this._ensureValidToken();
+    }
   
     async verifyToken(dbName, token) {
       const url = \`/auth/\${dbName}/verify-token\`;
       return http.get(url, { headers: { Authorization: \`Bearer \${token}\` } });
     }
   
-    async readRecords(dbName, token, tableName, filters = {}) {
+    async readRecords(dbName, tableName, filters = {}) {
+      const token = await this.getValidToken();
       const url = \`/database/\${dbName}/read\`;
       const params = { tableName, ...filters };
       const res = await http.get(url, {
@@ -620,7 +774,8 @@ function generateRobleExpressServer(service: Microservice): string {
       return res.data;
     }
   
-    async insertRecords(dbName, token, tableName, records) {
+    async insertRecords(dbName, tableName, records) {
+      const token = await this.getValidToken();
       const url = \`/database/\${dbName}/insert\`;
       const res = await http.post(
         url,
@@ -630,7 +785,8 @@ function generateRobleExpressServer(service: Microservice): string {
       return res.data;
     }
   
-    async updateRecord(dbName, token, tableName, idColumn, idValue, updates) {
+    async updateRecord(dbName, tableName, idColumn, idValue, updates) {
+      const token = await this.getValidToken();
       const url = \`/database/\${dbName}/update\`;
       const res = await http.put(
         url,
@@ -640,7 +796,8 @@ function generateRobleExpressServer(service: Microservice): string {
       return res.data;
     }
   
-    async deleteRecord(dbName, token, tableName, idColumn, idValue) {
+    async deleteRecord(dbName, tableName, idColumn, idValue) {
+      const token = await this.getValidToken();
       const url = \`/database/\${dbName}/delete\`;
       const res = await http.delete(url, {
         headers: { Authorization: \`Bearer \${token}\` },
@@ -697,51 +854,48 @@ function generateRobleExpressServer(service: Microservice): string {
     return res.json({ status: 'healthy' });
   });
   
-  // Endpoint principal: recibe Bearer + dbName (dynamic tenant)
+  // Endpoint principal: autenticación automática con Roble
   app.all('/execute', async (req, res) => {
     try {
-      // 1) Token del usuario
-      const token = getBearerToken(req);
-      if (!token) {
-        return safeJson(res, 401, { success: false, error: 'Missing Authorization: Bearer <token>' });
-      }
-  
-      // 2) dbName del usuario (su proyecto)
+      // 1) Obtener dbName (usar DEFAULT_DBNAME si no se especifica)
       let dbName;
       try {
         dbName = pickDbName(req);
       } catch (e) {
-        const code = e.status || 400;
-        return safeJson(res, code, { success: false, error: e.message || 'dbName inválido' });
+        // Si no se especifica dbName, usar el por defecto
+        dbName = DEFAULT_DBNAME;
+        if (!dbName) {
+          return safeJson(res, 400, { success: false, error: 'dbName no configurado' });
+        }
       }
   
-      // 3) Verificar token contra ese dbName
+      // 2) Obtener token válido automáticamente
+      let token;
       try {
-        await roble.verifyToken(dbName, token);
+        token = await roble.getValidToken();
       } catch (e) {
-        const code = e?.response?.status || 401;
-        return safeJson(res, code, {
+        return safeJson(res, 401, {
           success: false,
-          error: 'Token inválido o expirado para el dbName indicado',
-          detail: e?.response?.data || String(e)
+          error: 'Error de autenticación con Roble',
+          detail: e.message
         });
       }
   
-      // 4) Unificar params
+      // 3) Unificar params
       const params = { ...(req.body || {}), ...(req.query || {}) };
   
-      // 5) Helpers seguros para el código de usuario
+      // 4) Helpers seguros para el código de usuario
       const ctx = {
         params,
         dbName,
         token,
         tableName: TABLE_NAME,
-        readData: (filters) => roble.readRecords(dbName, token, TABLE_NAME, filters),
-        insertData: (records) => roble.insertRecords(dbName, token, TABLE_NAME, records),
-        updateData: (recordId, updates) => roble.updateRecord(dbName, token, TABLE_NAME, '_id', recordId, updates),
-        deleteData: (recordId) => roble.deleteRecord(dbName, token, TABLE_NAME, '_id', recordId),
+        readData: (filters) => roble.readRecords(dbName, TABLE_NAME, filters),
+        insertData: (records) => roble.insertRecords(dbName, TABLE_NAME, records),
+        updateData: (recordId, updates) => roble.updateRecord(dbName, TABLE_NAME, '_id', recordId, updates),
+        deleteData: (recordId) => roble.deleteRecord(dbName, TABLE_NAME, '_id', recordId),
         // También puedes exponer una consulta genérica si lo necesitas:
-        // readTable: (table, filters) => roble.readRecords(dbName, token, table, filters),
+        // readTable: (table, filters) => roble.readRecords(dbName, table, filters),
       };
   
       // 6) Ejecutar el código del servicio en un scope controlado

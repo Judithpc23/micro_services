@@ -252,6 +252,8 @@ class ContainerManager {
 				// Always regenerate the files to ensure they are up to date
 				this.log.info("🔄 Regenerando archivos del servidor...")
 				
+				// Variables de entorno se pasan via docker-compose env_file
+				
 				if (service.language === "python") {
 					await fs.writeFile(path.join(serviceDir, "main.py"), files.code, "utf8")
 					await fs.writeFile(path.join(serviceDir, "requirements.txt"), files.dependencies, "utf8")
@@ -264,7 +266,14 @@ class ContainerManager {
 					// Start the server process
 					const serverProcess = spawn('python', ['main.py'], {
 						cwd: serviceDir,
-						env: { ...process.env, PORT: servicePort.toString() },
+						env: { 
+							...process.env, 
+							PORT: servicePort.toString(),
+							// Variables específicas del servicio (no sensibles)
+							TABLE_NAME: service.tableName || 'microservices',
+							SERVICE_NAME: service.name,
+							SERVICE_TYPE: service.type
+						},
 						detached: false
 					})
 					
@@ -304,7 +313,14 @@ class ContainerManager {
 					// Start the server process
 					const serverProcess = spawn('node', ['index.js'], {
 						cwd: serviceDir,
-						env: { ...process.env, PORT: servicePort.toString() },
+						env: { 
+							...process.env, 
+							PORT: servicePort.toString(),
+							// Variables específicas del servicio (no sensibles)
+							TABLE_NAME: service.tableName || 'microservices',
+							SERVICE_NAME: service.name,
+							SERVICE_TYPE: service.type
+						},
 						detached: false
 					})
 					
@@ -447,12 +463,8 @@ class ContainerManager {
 			if (service.type === "roble" && service.robleContract) env.push(`ROBLE_CONTRACT=${service.robleContract}`)
 			if (service.type === "roble" && service.robleToken) env.push(`ROBLE_TOKEN=${service.robleToken}`)
 			
-			// Pasar variables de entorno globales de Roble
-			if (service.type === "roble") {
-				if (process.env.ROBLE_USER_EMAIL) env.push(`ROBLE_USER_EMAIL=${process.env.ROBLE_USER_EMAIL}`)
-				if (process.env.ROBLE_USER_PASSWORD) env.push(`ROBLE_USER_PASSWORD=${process.env.ROBLE_USER_PASSWORD}`)
-				if (process.env.ROBLE_BASE_HOST) env.push(`ROBLE_BASE_HOST=${process.env.ROBLE_BASE_HOST}`)
-			}
+			// Variables de entorno se cargan desde .env.local via docker-compose
+			// No se pasan variables sensibles individualmente por seguridad
 			const created = await this.docker.createContainer({
 				name: containerName,
 				Image: `microservice-${service.id}:latest`,
@@ -586,6 +598,8 @@ class ContainerManager {
 			this.log.error("❌ Error limpiando contenedores huérfanos:", { error: String(error) })
 		}
 	}
+	
+	// Función createServiceEnvFile eliminada - las variables se pasan via env_file en docker-compose
 }
 
 export const containerManager = new ContainerManager()

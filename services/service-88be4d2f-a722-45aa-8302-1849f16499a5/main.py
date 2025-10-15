@@ -5,10 +5,51 @@ import json
 
 app = Flask(__name__)
 
-# Configuración de Roble
-ROBLE_BASE_URL = os.getenv('ROBLE_BASE_HOST', 'https://roble-api.openlab.uninorte.edu.co')
-ROBLE_CONTRACT = os.getenv('ROBLE_CONTRACT', '')
-TABLE_NAME = 'microservices'
+# Cargar variables de entorno usando python-dotenv
+from dotenv import load_dotenv
+
+# Cargar automáticamente desde .env.local (prioridad) o .env
+load_dotenv('.env.local')  # Intenta cargar .env.local primero
+load_dotenv('.env')         # Fallback a .env si .env.local no existe
+load_dotenv()               # Fallback a archivo .env en directorio actual
+
+print("✅ Variables de entorno cargadas con python-dotenv")
+
+# Configuración de Roble con validación
+def get_required_env(key: str, description: str = None) -> str:
+    """Obtener variable de entorno requerida con validación"""
+    value = os.getenv(key)
+    if not value:
+        error_msg = f"Variable de entorno requerida no encontrada: {key}"
+        if description:
+            error_msg += f" ({description})"
+        raise ValueError(error_msg)
+    return value
+
+def get_optional_env(key: str, default: str = None) -> str:
+    """Obtener variable de entorno opcional"""
+    return os.getenv(key, default)
+
+# Cargar configuración con validación
+try:
+    ROBLE_BASE_URL = get_required_env('ROBLE_BASE_HOST', 'URL base de la API de Roble')
+    ROBLE_CONTRACT = get_required_env('ROBLE_CONTRACT', 'Contrato de Roble')
+    TABLE_NAME = get_required_env('TABLE_NAME', 'Nombre de la tabla')
+    ROBLE_USER_EMAIL = get_optional_env('ROBLE_USER_EMAIL')
+    ROBLE_USER_PASSWORD = get_optional_env('ROBLE_USER_PASSWORD')
+    ROBLE_TOKEN = get_optional_env('ROBLE_TOKEN')
+    ROBLE_MODE = get_optional_env('ROBLE_MODE', 'current')
+    
+    print(f"✅ Configuración Roble cargada:")
+    print(f"   - Base URL: {ROBLE_BASE_URL}")
+    print(f"   - Contract: {ROBLE_CONTRACT}")
+    print(f"   - Table: {TABLE_NAME}")
+    print(f"   - Mode: {ROBLE_MODE}")
+    
+except ValueError as e:
+    print(f"❌ Error de configuración: {e}")
+    print("💡 Asegúrate de tener las variables requeridas en .env.local")
+    raise
 
 # Cliente Roble para operaciones de base de datos
 class RobleClient:
@@ -17,9 +58,9 @@ class RobleClient:
         self.contract = contract
         self.database_url = f"{base_url}/database/{contract}"
         self._token = None
-        self._email = os.getenv('ROBLE_USER_EMAIL', '')
-        self._password = os.getenv('ROBLE_USER_PASSWORD', '')
-        self._roble_mode = 'current'
+        self._email = ROBLE_USER_EMAIL
+        self._password = ROBLE_USER_PASSWORD
+        self._roble_mode = ROBLE_MODE
     
     def _get_token(self):
         """Obtener token de autenticación, renovando si es necesario"""
@@ -32,7 +73,7 @@ class RobleClient:
                 return self._authenticate_with_credentials()
         else:
             # Para modo 'different', usar token directo o credenciales del servicio
-            direct_token = os.getenv('ROBLE_TOKEN', '')
+            direct_token = ROBLE_TOKEN
             if direct_token:
                 self._token = direct_token
                 return self._token
@@ -43,20 +84,32 @@ class RobleClient:
     
     def _authenticate_with_credentials(self):
         """Autenticar usando email y password"""
+        # Verificar que el contract no esté vacío
+        if not self.contract or self.contract.strip() == "":
+            raise Exception("ROBLE_CONTRACT no está configurado")
+        
         auth_url = f"{self.base_url}/auth/{self.contract}/login"
         auth_data = {
             "email": self._email,
             "password": self._password
         }
         
+        # Debug: imprimir la URL
+        print(f"DEBUG: Intentando autenticar en: {auth_url}")
+        print(f"DEBUG: Email: {self._email}")
+        print(f"DEBUG: Password configurado: {bool(self._password)}")
+        
         try:
             response = requests.post(auth_url, json=auth_data)
+            print(f"DEBUG: Response status: {response.status_code}")
+            print(f"DEBUG: Response text: {response.text[:200]}")
+            
             if response.ok:
                 auth_result = response.json()
                 self._token = auth_result.get('accessToken')
                 return self._token
             else:
-                raise Exception(f"Error de autenticación: {response.status_code}")
+                raise Exception(f"Error de autenticación: {response.status_code} - {response.text}")
         except Exception as e:
             raise Exception(f"Error conectando con Roble: {str(e)}")
     
@@ -169,9 +222,9 @@ roble = RobleClient(ROBLE_BASE_URL, ROBLE_CONTRACT)
 def home():
     return jsonify({
         "message": "Roble Service ready",
-        "serviceId": "e1208190-d415-4f62-90bf-d55626ed16d2",
+        "serviceId": "88be4d2f-a722-45aa-8302-1849f16499a5",
         "tableName": TABLE_NAME,
-        "endpoint": f"http://localhost:3000/e1208190-d415-4f62-90bf-d55626ed16d2",
+        "endpoint": f"http://localhost:3000/88be4d2f-a722-45aa-8302-1849f16499a5",
         "status": "running"
     })
 
@@ -205,13 +258,30 @@ def execute():
             return roble.delete_record(TABLE_NAME, '_id', record_id)
         
         # Ejecutar el código personalizado del usuario
+        # Roble Microservice - Python
+        # This service can interact with your Roble database
+        
         def main():
+            # Example: Read all records from the table
             records = read_data()
+            print(f"Found {len(records)} records")
+            
+            # Process the records as needed
+            for record in records:
+                print(f"Record ID: {record.get('_id')}")
+                print(f"Data: {record}")
+            
             return {
                 "message": "Roble microservice executed successfully",
                 "records_count": len(records),
                 "status": "completed"
             }
+        
+        # Available helper functions:
+        # - read_data(filters=None): Read records from the table
+        # - insert_data(records): Insert new records
+        # - update_data(record_id, updates): Update a specific record
+        # - delete_data(record_id): Delete a specific record
         
         # Si el código define una función, ejecutarla automáticamente
         result = "Execution completed"

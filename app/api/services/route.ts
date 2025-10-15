@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     }
 
     // Unsafe code validation
-    const validation = validateServiceCode({ language, code })
+    const validation = validateServiceCode({ language, code, serviceType: type })
     if (!validation.valid) {
       return NextResponse.json({ error: "Unsafe code detected", reasons: validation.reasons }, { status: 400 })
     }
