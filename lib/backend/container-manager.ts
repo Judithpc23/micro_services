@@ -513,9 +513,23 @@ class ContainerManager {
 			const envVars = await this.loadEnvFile()
 
 			// Add service-specific variables (these override .env.local if duplicated)
-			if (service.type === "roble" && service.tableName) envVars["TABLE_NAME"] = service.tableName
-			if (service.type === "roble" && service.robleContract) envVars["ROBLE_CONTRACT"] = service.robleContract
-			if (service.type === "roble" && service.robleToken) envVars["ROBLE_TOKEN"] = service.robleToken
+			if (service.type === "roble") {
+				if (service.tableName) envVars["TABLE_NAME"] = service.tableName
+				// Always pass ROBLE_MODE so generated server selects the correct source
+				envVars["ROBLE_MODE"] = service.robleMode || 'current'
+
+				if (service.robleMode === 'different') {
+					// Use form-provided credentials exclusively for 'different' mode
+					if (service.robleContract) envVars["ROBLE_SERVICE_CONTRACT"] = service.robleContract
+					if (service.robleEmail) envVars["ROBLE_SERVICE_EMAIL"] = service.robleEmail
+					if (service.roblePassword) envVars["ROBLE_SERVICE_PASSWORD"] = service.roblePassword
+					if (service.robleToken) envVars["ROBLE_SERVICE_TOKEN"] = service.robleToken
+				} else {
+					// Current project mode: optional overrides if provided
+					if (service.robleContract) envVars["ROBLE_CONTRACT"] = service.robleContract
+					if (service.robleToken) envVars["ROBLE_TOKEN"] = service.robleToken
+				}
+			}
 
 			// Convert to Docker env format: ["KEY=value", ...]
 			const env = Object.entries(envVars).map(([key, value]) => `${key}=${value}`)

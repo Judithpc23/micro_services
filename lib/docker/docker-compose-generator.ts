@@ -7,9 +7,23 @@ export function generateDockerCompose(service: Microservice, port: number): stri
 		SERVICE_NAME: service.name,
 		SERVICE_TYPE: service.type,
 	}
-	if (service.type === "roble" && service.tableName) env["TABLE_NAME"] = service.tableName
-	if (service.type === "roble" && service.robleProjectName) env["ROBLE_PROJECT"] = service.robleProjectName
-	if (service.type === "roble" && service.robleToken) env["ROBLE_TOKEN"] = service.robleToken
+	if (service.type === "roble") {
+		if (service.tableName) env["TABLE_NAME"] = service.tableName
+		// Always pass mode (defaults to current)
+		env["ROBLE_MODE"] = service.robleMode || "current"
+
+		if (service.robleMode === "different") {
+			// Use per-service credentials for Different project mode
+			if (service.robleContract) env["ROBLE_SERVICE_CONTRACT"] = service.robleContract
+			if (service.robleEmail) env["ROBLE_SERVICE_EMAIL"] = service.robleEmail
+			if (service.roblePassword) env["ROBLE_SERVICE_PASSWORD"] = service.roblePassword
+			if (service.robleToken) env["ROBLE_SERVICE_TOKEN"] = service.robleToken
+		} else {
+			// Current project mode: allow optional overrides
+			if (service.robleContract) env["ROBLE_CONTRACT"] = service.robleContract
+			if (service.robleToken) env["ROBLE_TOKEN"] = service.robleToken
+		}
+	}
 
 	const compose = {
 		services: {
@@ -69,14 +83,22 @@ export function generateGlobalDockerCompose(services: Microservice[]): string {
 			SERVICE_NAME: service.name,
 			SERVICE_TYPE: service.type,
 		}
-		if (service.type === "roble" && service.tableName) {
-			env["TABLE_NAME"] = service.tableName
-		}
-		if (service.type === "roble" && service.robleProjectName) {
-			env["ROBLE_PROJECT"] = service.robleProjectName
-		}
-		if (service.type === "roble" && service.robleToken) {
-			env["ROBLE_TOKEN"] = service.robleToken
+		if (service.type === "roble") {
+			if (service.tableName) env["TABLE_NAME"] = service.tableName
+			// Always pass mode (defaults to current)
+			env["ROBLE_MODE"] = service.robleMode || "current"
+
+			if (service.robleMode === "different") {
+				// Use per-service credentials for Different project mode
+				if (service.robleContract) env["ROBLE_SERVICE_CONTRACT"] = service.robleContract
+				if (service.robleEmail) env["ROBLE_SERVICE_EMAIL"] = service.robleEmail
+				if (service.roblePassword) env["ROBLE_SERVICE_PASSWORD"] = service.roblePassword
+				if (service.robleToken) env["ROBLE_SERVICE_TOKEN"] = service.robleToken
+			} else {
+				// Current project mode: allow optional overrides
+				if (service.robleContract) env["ROBLE_CONTRACT"] = service.robleContract
+				if (service.robleToken) env["ROBLE_TOKEN"] = service.robleToken
+			}
 		}
 
 		compose.services[service.id] = {
