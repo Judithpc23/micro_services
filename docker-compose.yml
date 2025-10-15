@@ -10,6 +10,7 @@ services:
       SERVICE_NAME: leertabla
       SERVICE_TYPE: roble
       TABLE_NAME: microservices
+      ROBLE_MODE: current
     env_file:
       - .env.local
     restart: unless-stopped
@@ -26,6 +27,10 @@ services:
       SERVICE_NAME: leerpersonas
       SERVICE_TYPE: roble
       TABLE_NAME: personas
+      ROBLE_MODE: different
+      ROBLE_SERVICE_CONTRACT: micro_services_c9831a5f3a
+      ROBLE_SERVICE_EMAIL: personas@gmail.com
+      ROBLE_SERVICE_PASSWORD: Contraseña123!
     env_file:
       - .env.local
     restart: unless-stopped
@@ -42,6 +47,27 @@ services:
       SERVICE_NAME: personas
       SERVICE_TYPE: roble
       TABLE_NAME: personas
+      ROBLE_MODE: different
+      ROBLE_SERVICE_CONTRACT: micro_services_c9831a5f3a
+      ROBLE_SERVICE_EMAIL: personas@gmail.com
+      ROBLE_SERVICE_PASSWORD: Contraseña123!
+    env_file:
+      - .env.local
+    restart: unless-stopped
+    networks:
+      - microservices-network
+  87fd15ba-b587-44f5-97bb-1e41b5e65760:
+    container_name: microservice-87fd15ba-b587-44f5-97bb-1e41b5e65760
+    build:
+      context: ./services/service-87fd15ba-b587-44f5-97bb-1e41b5e65760
+      dockerfile: ../../dockerfiles/Dockerfile.87fd15ba-b587-44f5-97bb-1e41b5e65760
+    ports:
+      - 45504:3000
+    environment:
+      SERVICE_NAME: dsadsa
+      SERVICE_TYPE: roble
+      TABLE_NAME: microservices
+      ROBLE_MODE: current
     env_file:
       - .env.local
     restart: unless-stopped

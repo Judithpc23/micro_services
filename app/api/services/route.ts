@@ -36,6 +36,10 @@ export async function POST(request: Request) {
     if (!["execution", "roble"].includes(type)) {
       return NextResponse.json({ error: "Invalid service type" }, { status: 400 })
     }
+    // Roble services are Python-only
+    if (type === "roble" && language !== "python") {
+      return NextResponse.json({ error: "Roble services only support Python" }, { status: 400 })
+    }
     // Require tableName for Roble.
     if (type === "roble") {
       if (!tableName || typeof tableName !== "string") {

@@ -73,10 +73,14 @@ export function CreateServiceForm({
     }
   }, [editingService])
 
-  // Set default code when type changes to "roble"
+  // Force python when switching to Roble and set default code
   useEffect(() => {
-    if (type === "roble" && !editingService) {
-      if (language === "python") {
+    if (type === "roble") {
+      // Always enforce Python for Roble services
+      if (language !== "python") {
+        setLanguage("python")
+      }
+      if (!editingService) {
         setCode(`# Roble Microservice - Python
 # This service can interact with your Roble database
 
@@ -271,18 +275,20 @@ async function main() {
               >
                 Python
               </button>
-              <button
-                type="button"
-                onClick={() => setLanguage("javascript")}
-                disabled={isSubmitting}
-                className={`rounded-md border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
-                  language === "javascript"
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border bg-input text-muted-foreground hover:bg-secondary"
-                }`}
-              >
-                JavaScript
-              </button>
+              {type !== "roble" && (
+                <button
+                  type="button"
+                  onClick={() => setLanguage("javascript")}
+                  disabled={isSubmitting}
+                  className={`rounded-md border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
+                    language === "javascript"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-input text-muted-foreground hover:bg-secondary"
+                  }`}
+                >
+                  JavaScript
+                </button>
+              )}
             </div>
           </div>
 

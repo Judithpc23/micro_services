@@ -37,5 +37,16 @@
     "roblePassword": "Contraseña123!",
     "robleMode": "different",
     "createdAt": "2025-10-15T04:15:59.242Z"
+  },
+  {
+    "id": "87fd15ba-b587-44f5-97bb-1e41b5e65760",
+    "name": "dsadsa",
+    "description": "dsadad",
+    "language": "python",
+    "code": "# Roble Microservice - Python\n# This service can interact with your Roble database\n\ndef main():\n    # Example: Read all records from the table\n    records = read_data()\n    print(f\"Found {len(records)} records\")\n    \n    # Process the records as needed\n    for record in records:\n        print(f\"Record ID: {record.get('_id')}\")\n        print(f\"Data: {record}\")\n    \n    return {\n        \"message\": \"Roble microservice executed successfully\",\n        \"records_count\": len(records),\n        \"status\": \"completed\"\n    }\n\n# Available helper functions:\n# - read_data(filters=None): Read records from the table\n# - insert_data(records): Insert new records\n# - update_data(record_id, updates): Update a specific record\n# - delete_data(record_id): Delete a specific record",
+    "type": "roble",
+    "tableName": "microservices",
+    "robleMode": "current",
+    "createdAt": "2025-10-15T04:40:02.583Z"
   }
 ]

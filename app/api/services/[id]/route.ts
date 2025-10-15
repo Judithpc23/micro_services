@@ -42,6 +42,13 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (type !== undefined && !["execution", "roble"].includes(type)) {
       return NextResponse.json({ error: "Invalid service type" }, { status: 400 })
     }
+    // Roble services are Python-only (consider existing values if not provided)
+    const current = servicesStore.getById(id)
+    const finalType = (type as any) ?? current?.type
+    const finalLanguage = (language as any) ?? current?.language
+    if (finalType === "roble" && finalLanguage !== "python") {
+      return NextResponse.json({ error: "Roble services only support Python" }, { status: 400 })
+    }
     if (type === "roble") {
       if (tableName !== undefined && typeof tableName !== "string") {
         return NextResponse.json({ error: "Invalid table name" }, { status: 400 })
