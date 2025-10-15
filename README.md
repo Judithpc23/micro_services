@@ -273,23 +273,6 @@ def main():
     }
 ```
 
-**Ejemplo 2: Inserción de Datos**
-```python
-def main():
-    # Insertar nuevos registros
-    new_records = [
-        {"name": "Usuario 1", "email": "user1@example.com"},
-        {"name": "Usuario 2", "email": "user2@example.com"}
-    ]
-    
-    result = insert_data(new_records)
-    
-    return {
-        "message": "Datos insertados exitosamente",
-        "inserted_count": len(new_records),
-        "result": result,
-        "status": "success"
-    }
 
 # Funciones helper disponibles:
 # - read_data(filters=None): Leer registros de la tabla
