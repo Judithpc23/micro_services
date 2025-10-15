@@ -1,193 +1,606 @@
-# Microservices Platform – Backend
+#  Microservices Platform
 
-Plataforma educativa para crear, almacenar y ejecutar microservicios dinámicos en tiempo de ejecución. Construida sobre Next.js (App Router) con endpoints REST bajo `/api/**`. Soporta dos tipos:
+## Tabla de Contenidos
 
-- `execution`: servicios que se ejecutan localmente (simulados o, a futuro, vía Docker real).
-- `roble`: servicios ejecutados (o simulados) mediante la integración con la plataforma Roble.
+- [Descripción del Proyecto](#-descripción-del-proyecto)
+- [Características](#-características-detalladas)
+- [Stack Tecnológico](#-stack-tecnológico)
+- [Quick Start](#-quick-start)
+- [Instalación Detallada](#-instalación-detallada)
+- [Configuración](#-configuración)
+- [Guía de Uso](#-guía-de-uso)
+- [API Principal](#-api-principal)
+- [Ejemplos de Solicitudes y Respuestas](#-ejemplos-de-solicitudes-y-respuestas)
+- [Tipos de Servicios](#-tipos-de-servicios)
+- [Arquitectura](#-arquitectura)
+- [Scripts](#-scripts)
+- [Construcción y Ejecución de Contenedores](#-construcción-y-ejecución-de-contenedores)
+- [Troubleshooting](#-troubleshooting)
+- [Licencia](#-licencia)
 
-## Arquitectura breve
+---
 
-- API Routes (Next.js):
-	- `app/api/services/route.ts`: listado y creación
-	- `app/api/services/[id]/route.ts`: lectura/actualización/eliminación
-	- `app/api/services/[id]/dockerfile/route.ts`: genera Dockerfile y archivos base
-	- `app/api/services/[id]/compose/route.ts`: genera docker-compose y scripts
-	- `app/api/services/[id]/execute/route.ts`: ejecuta (inicia) un servicio
-	- `app/api/services/[id]/start/route.ts`: inicia un servicio
-	- `app/api/services/[id]/status/route.ts`: estado del servicio
-	- `app/api/services/[id]/stop/route.ts`: detiene un servicio
-	- `app/api/services/[id]/invoke/route.ts`: asegura que el servicio esté corriendo y devuelve endpoint (para pruebas rápidas)
+##  Descripción del Proyecto
 
-- Capa backend (`lib/backend/**`):
-	- `services-store.ts`: almacenamiento con persistencia en disco (`.data/services.json`)
-	- `container-manager.ts`: gestiona el ciclo de vida (simulado local / Roble / placeholder Docker)
-	- `roble-client.ts`: cliente Roble (modo stub por defecto + modo remoto habilitable por flag)
-	- `code-validator.ts`: validación simple anti‑patrones peligrosos (eval, fs, subprocess, etc.)
+**Microservices Platform** es una plataforma completa y moderna para crear, gestionar y desplegar microservicios de forma sencilla y eficiente. La plataforma permite a los desarrolladores crear microservicios en **Python** o **JavaScript**, gestionarlos a través de un dashboard intuitivo y desplegarlos automáticamente en contenedores Docker.
 
-- Generadores Docker (`lib/docker/**`):
-	- `dockerfile-generator.ts`: genera Dockerfile y archivos de servicio
-	- `docker-compose-generator.ts`: genera docker-compose y scripts start/stop
+###  Objetivo Principal
 
-## Tipos
+Simplificar el proceso de creación y gestión de microservicios, permitiendo a los desarrolladores:
+- Crear microservicios sin configuración manual de Docker
+- Gestionar múltiples servicios desde un dashboard centralizado
+- Desplegar y escalar servicios de forma automática
+- Monitorear el estado de los servicios en tiempo real
 
-`Microservice` (`lib/types/microservice.ts`):
-- id: string
-- name: string
-- description: string
-- language: "python" | "javascript"
-- code: string
-- type: "execution" | "roble"
-- tableName?: string  (requerido si `type === "roble"`)
- - robleProjectName?: string (requerido si `type === "roble"`)
- - robleToken?: string (requerido si `type === "roble"`)
-- createdAt: Date
+## Características
 
-## Endpoints
+### Características Clave
 
-- GET `/api/services`
-	- Respuesta: `Microservice[]`
+- **100% Basado en Contenedores Docker**: Cada microservicio se ejecuta en su propio contenedor aislado
+- **Multi-lenguaje**: Soporte para Python y JavaScript
+- **Auto-despliegue**: Generación automática de Dockerfiles y despliegue instantáneo
+- **Dashboard Web**: Interfaz intuitiva para gestionar todos los servicios
+- **Integración Roble**: Soporte para servicios con acceso a bases de datos
+- **Operaciones Bulk**: Gestiona múltiples servicios simultáneamente
+- **Health Checks**: Monitoreo automático del estado de los servicios
+- **Auto-restart**: Reinicio automático de contenedores en caso de fallo
 
-- POST `/api/services`
-	- Body: { name, description, language: "python"|"javascript", code, type: "execution"|"roble", tableName?, robleProjectName?, robleToken? }
-	- Si `type === "roble"`, `tableName`, `robleProjectName` y `robleToken` son obligatorios.
-	- Respuesta: `Microservice` creado
+### Funcionalidades Técnicas
 
-- GET `/api/services/[id]`
-	- Respuesta: `Microservice`
+- Crear y gestionar microservicios (Python/JavaScript)
+- Generación automática de Dockerfiles
+- Control completo de contenedores Docker
+- Dashboard intuitivo con UI moderna
+- Operaciones bulk (iniciar/detener todos)
+- Integración con Roble para bases de datos
+- Validación de código y seguridad
+- Auto-restart de contenedores
+- Health checks integrados
 
-- PUT `/api/services/[id]`
-	- Body parcial: { name?, description?, language?, code?, type?, tableName?, robleProjectName?, robleToken? }
-	- Respuesta: `Microservice` actualizado
+## Stack Tecnológico
 
-- DELETE `/api/services/[id]`
-	- Respuesta: { success: true }
+**Frontend:** Next.js 15, TypeScript, Tailwind CSS, Radix UI  
+**Backend:** Next.js API Routes, Dockerode  
+**DevOps:** Docker, Docker Compose
 
-- GET `/api/services/[id]/dockerfile`
-	- Respuesta: { success: true, data: { dockerfile, code, dependencies, language } }
+##  Quick Start
 
-- GET `/api/services/[id]/compose`
-	- Respuesta: { dockerCompose, startScript, stopScript, port }
+### Instalación en 3 Pasos
 
-- POST `/api/services/[id]/execute`
-	- Inicia el servicio. Para `type="execution"` arranca contenedor simulado local; para `type="roble"` delega en Roble.
-	- Respuesta: { success, message, serviceId, status, endpoint, port, startedAt }
-
-- POST `/api/services/[id]/start`
-	- Igual a `execute` (alias de inicio). Respuesta similar.
-
-- GET `/api/services/[id]/status`
-	- Respuesta: { serviceId, serviceName, container: ContainerInfo }
-
-- POST `/api/services/[id]/stop`
-	- Detiene el servicio. Respuesta: { success, message, container }
-
-- POST `/api/services/[id]/invoke`
-  - Garantiza que el servicio esté en ejecución (lo inicia si no) y devuelve `{ endpoint, status }`.
-
-`ContainerInfo`:
-- serviceId: string
-- status: "starting" | "running" | "stopped" | "error"
-- endpoint: string | null
-- port: number | null
-- startedAt: string | null
-- stoppedAt: string | null
-- error: string | null
-
-## Persistencia
-
-El store mantiene los microservicios en memoria y los vuelca con debounce a `.data/services.json`. Al reiniciar en desarrollo se recargan los registros existentes. Esto evita depender de una base de datos externa en esta fase académica.
-
-## Seguridad (Validación de Código)
-
-`lib/backend/code-validator.ts` ejecuta un filtrado sencillo por expresiones regulares para impedir patrones considerados peligrosos (por ejemplo `eval(`, acceso a `fs` en Node, `subprocess` en Python). Si se detecta un patrón el endpoint POST/PUT devuelve HTTP 400 con el detalle.
-
-Limitaciones: No es un análisis estático completo ni un sandbox. Para producción se recomienda usar aislamiento real (contenedores) y/o herramientas de análisis estático.
-
-## Integración con Roble
-
-- Archivo: `lib/backend/roble-client.ts`
-- Métodos:
-	- `runService(service, token)` -> { jobId, statusUrl, endpoint? }
-	- `stopService(jobId, token)` -> void
-	- `getStatus(jobId, token)` -> { jobId, state, endpoint?, error? }
-
-Modos:
-- Stub (por defecto): `ENABLE_ROBLE_REMOTE != true`. Se devuelven jobs sintéticos y endpoints locales.
-- Remoto: `ENABLE_ROBLE_REMOTE=true`. Los métodos realizan peticiones HTTP reales (endpoints placeholder `/api/jobs` listos para ser ajustados a la API real de Roble).
-
-Variables relevantes: `ROBLE_API_BASE`, `ROBLE_API_TIMEOUT`, `ROBLE_API_TOKEN`, `ROBLE_LOCAL_BASE_URL`.
-
-Para conectar con la API oficial sustituya las rutas `/api/jobs` por las definitivas, añada headers requeridos y maneje campos de respuesta reales (estado, endpoint, errores).
-
-`container-manager.ts` delega automáticamente hacia Roble cuando `service.type === "roble"`.
-
-## Feature Flags y Variables de Entorno
-
-Archivo de ejemplo: `.env.example`
-
-| Variable | Descripción | Default |
-|----------|-------------|---------|
-| ENABLE_ROBLE_REMOTE | Activa modo remoto real Roble | false |
-| ENABLE_DOCKER_RUNTIME | Activa ejecución real Docker (placeholder) | false |
-| ROBLE_API_BASE | Base URL Roble | https://roble.openlab.uninorte.edu.co |
-| ROBLE_API_TOKEN | Token global fallback | (vacío) |
-| ROBLE_API_TIMEOUT | Timeout ms peticiones Roble | 10000 |
-| ROBLE_LOCAL_BASE_URL | Base local para stubs | http://localhost:3000 |
-| SERVICE_BASE_PORT | Puerto base asignación determinista | 45000 |
-
-## Docker Runtime (Placeholder)
-
-Cuando `ENABLE_DOCKER_RUNTIME=true`, el `container-manager` llamará a métodos `buildAndRunDocker` / `stopDockerContainer` que hoy son placeholders con logs. Allí se puede integrar `dockerode` o invocaciones CLI:
-
-Pasos sugeridos:
-1. Generar Dockerfile con `/api/services/[id]/dockerfile`.
-2. Construir imagen (tag basada en id).
-3. Correr contenedor mapeando puerto (hash determinista desde SERVICE_BASE_PORT).
-4. Capturar logs y actualizar estado.
-5. Al detener, hacer `docker stop` y opcional `docker rm`.
-
-## Endpoint de Invocación Rápida
-
-`POST /api/services/[id]/invoke` facilita el uso desde la UI: asegura que el servicio está corriendo y devuelve el endpoint sin duplicar lógica de arranque. La UI abre un diálogo para pegar parámetros / token.
-
-`lib/backend/container-manager.ts` delega a Roble cuando `service.type === "roble"` y usa `tableName`.
-
-## Cómo ejecutar
-
-Requisitos: Node.js 18+.
-
-Instalar dependencias y ejecutar en desarrollo (PowerShell):
-
-```powershell
-pnpm install
-pnpm dev
-```
-
-o con npm:
-
-```powershell
+```bash
+# 1. Clonar e instalar
+git clone <tu-repositorio>
+cd micro_services
 npm install
+
+# 2. Configurar y crear red Docker
+cp .env.example .env.local  # Editar con tus credenciales
+docker network create microservices_net
+
+# 3. Ejecutar
 npm run dev
 ```
 
-La API estará disponible en `http://localhost:3000/api/*`.
+Abre `http://localhost:3000` y ¡listo! 
 
-Build de producción:
+### Crear tu Primer Microservicio
 
-```powershell
-pnpm build; pnpm start
+1. Ve al dashboard en `http://localhost:3000`
+2. Completa el formulario:
+   - **Nombre**: "Mi Primer Servicio"
+   - **Lenguaje**: Python o JavaScript
+   - **Código**: Tu código personalizado
+3. Haz clic en "Create Service"
+4. ¡El contenedor se construye y ejecuta automáticamente!
+
+##  Instalación Detallada
+
+### Requisitos Previos
+
+- **Node.js** >= 18.x
+- **Docker** >= 20.x (obligatorio)
+- **Docker Compose** >= 2.x
+
+### Verificar Requisitos
+
+```bash
+# Verificar versiones
+node --version    # Debe ser >= 18.x
+npm --version     # Debe ser >= 9.x
+docker --version  # Debe ser >= 20.x
+docker-compose --version  # Debe ser >= 2.x
 ```
 
-## Notas
+### Pasos de Instalación Completos
 
-- Persistencia ligera: `.data/services.json` (no hay migraciones; formato simple JSON).
-- Scripts `start.sh` y `stop.sh` generados por `/compose` son demostrativos; en Windows use Docker Desktop / PowerShell adaptado.
-- Validación de código es heurística: no ejecutar código no confiable sin aislamiento real.
-- Extensiones futuras: métricas, logs por contenedor, colas de ejecución, sandboxing.
+```bash
+# 1. Clonar el repositorio
+git clone <tu-repositorio>
+cd micro_services
 
-## Roadmap Breve
+# 2. Instalar dependencias
+npm install
 
-- [ ] Integrar endpoints reales Roble.
-- [ ] Implementar Docker real (build/run/stop) con streaming de logs.
-- [ ] Sandbox / aislamiento mejorado.
-- [ ] Tests automatizados (unit + contract API).
+# 3. Configurar variables de entorno
+# Crea un archivo .env.local en la raíz del proyecto
+# Copia el contenido de la sección "Configuración" más abajo
+
+# 4. Crear red Docker (obligatorio)
+docker network create microservices_net
+
+# 5. Verificar que Docker está corriendo
+docker ps
+
+# 6. Ejecutar la aplicación
+npm run dev
+```
+
+Abre `http://localhost:3000` en tu navegador
+
+### Verificación de Docker
+
+```bash
+# Verificar que Docker está corriendo
+docker ps
+
+# Verificar que la red existe
+docker network ls | grep microservices_net
+
+# Si Docker no está corriendo (Linux)
+sudo systemctl start docker
+
+# Si Docker no está corriendo (macOS/Windows)
+# Abre Docker Desktop
+```
+
+## Configuración
+
+### Variables de Entorno
+
+Crea un archivo `.env.local` en la raíz del proyecto:
+
+```env
+# Docker Configuration (Requerido)
+ENABLE_DOCKER_RUNTIME=true
+SERVICE_BASE_PORT=45000
+DOCKER_NETWORK_NAME=microservices_net
+PROXY_BASE_URL=http://localhost:3000
+
+# Configuración de Roble (Opcional)
+SYNC_MICROSERVICES_TO_ROBLE=false
+ROBLE_BASE_HOST=https://roble-api.openlab.uninorte.edu.co
+ROBLE_CONTRACT=micro_services_b5fd2708be
+ENABLE_ROBLE_REMOTE=false
+ROBLE_USER_EMAIL=test@example.com
+ROBLE_USER_PASSWORD=Password123!
+ROBLE_USER_NAME=Test User
+
+# Configuración de logging
+LOG_LEVEL=debug
+
+# Development
+NODE_ENV=development
+```
+
+**Nota:** Ajusta las credenciales de Roble según tu configuración.
+
+##  Guía de Uso
+
+### Crear un Microservicio
+
+**Dashboard:**
+1. Ve a `http://localhost:3000`
+2. Completa el formulario (nombre, lenguaje, tipo, código)
+3. Haz clic en "Create Service"
+
+**API:**
+```bash
+curl -X POST http://localhost:3000/api/services \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Calculator", "language": "python", "type": "execution", "code": "def add(a, b): return a + b"}'
+```
+
+### Gestionar Servicios
+
+| Operación | Descripción |
+|-----------|-------------|
+| **Iniciar** | Construye y ejecuta el contenedor |
+| **Detener** | Detiene el contenedor |
+| **Estado** | Ver estado (running/stopped/error) |
+| **Ejecutar** | Ejecuta el código |
+| **Editar** | Modificar y reiniciar |
+| **Eliminar** | Eliminar servicio |
+
+**Bulk:** Iniciar/detener todos, sincronizar con Docker
+
+### Ejemplos de Código
+
+#### Servicios Execution (Python)
+
+**Ejemplo 1: Función Simple**
+```python
+def hola():
+    return "Hola mundo"
+```
+
+**Ejemplo 2: Calculadora con Parámetros**
+```python
+# Endpoint está en http://localhost:3000/{id}/execute?a=1&b=2
+def suma():
+    a = request.args.get('a', default=0, type=int)
+    b = request.args.get('b', default=0, type=int)
+    resultado = a + b
+    return f"La suma de {a} y {b} es {resultado}"
+```
+
+#### Servicios Execution (JavaScript)
+
+**Ejemplo 1: Función Simple**
+```javascript
+function saludar() {
+    return "Hola mundo desde JavaScript";
+}
+```
+
+**Ejemplo 2: Procesador de Datos**
+```javascript
+function process_data(data) {
+    return data.map(item => ({
+        ...item,
+        processed: true,
+        value: item.value * 2
+    }));
+}
+```
+
+#### Servicios Roble (Solo Python)
+
+**Ejemplo 1: Lectura de Datos**
+```python
+def main():
+    records = read_data()
+    print(f"Found {len(records)} records")
+    
+    for record in records:
+        print(f"Record ID: {record.get('_id')}")
+        print(f"Data: {record}")
+    
+    return {
+        "message": "Roble microservice executed successfully",
+        "records_count": len(records),
+        "records": records,
+        "status": "completed"
+    }
+```
+
+**Ejemplo 2: Inserción de Datos**
+```python
+def main():
+    # Insertar nuevos registros
+    new_records = [
+        {"name": "Usuario 1", "email": "user1@example.com"},
+        {"name": "Usuario 2", "email": "user2@example.com"}
+    ]
+    
+    result = insert_data(new_records)
+    
+    return {
+        "message": "Datos insertados exitosamente",
+        "inserted_count": len(new_records),
+        "result": result,
+        "status": "success"
+    }
+
+# Funciones helper disponibles:
+# - read_data(filters=None): Leer registros de la tabla
+# - insert_data(records): Insertar nuevos registros
+# - update_data(record_id, updates): Actualizar un registro específico
+# - delete_data(record_id): Eliminar un registro específico
+```
+
+### Invocar Servicio
+
+```bash
+curl -X POST http://localhost:3000/api/services/{id}/invoke \
+  -H "Content-Type: application/json" \
+  -d '{"param": "value"}'
+```
+
+### Monitorear
+
+```bash
+docker logs -f microservice-{id}        # Ver logs
+docker ps | grep microservice-{id}     # Ver estado
+docker stats microservice-{id}         # Ver recursos
+```
+
+##  API Principal
+
+### Endpoints Disponibles
+
+#### Servicios (CRUD)
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/services` | Listar todos los servicios |
+| POST | `/api/services` | Crear un nuevo servicio |
+| GET | `/api/services/{id}` | Obtener un servicio específico |
+| PUT | `/api/services/{id}` | Actualizar un servicio |
+| DELETE | `/api/services/{id}` | Eliminar un servicio |
+
+#### Control de Servicios
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/api/services/{id}/start` | Iniciar un servicio |
+| POST | `/api/services/{id}/stop` | Detener un servicio |
+| GET | `/api/services/{id}/status` | Obtener estado del servicio |
+| POST | `/api/services/{id}/execute` | Ejecutar el servicio |
+| POST | `/api/services/{id}/invoke` | Invocar con parámetros |
+| GET | `/api/services/{id}/dockerfile` | Ver Dockerfile generado |
+
+#### Operaciones Bulk
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/api/services/bulk/start` | Iniciar todos los servicios |
+| POST | `/api/services/bulk/stop` | Detener todos los servicios |
+| GET | `/api/services/bulk/status` | Estado de todos los servicios |
+| POST | `/api/services/bulk/sync` | Sincronizar con Docker |
+
+##  Ejemplos de API
+
+### Crear Servicio
+
+**Request:**
+```bash
+curl -X POST http://localhost:3000/api/services \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Calculator", "language": "python", "type": "execution", "code": "def add(a, b): return a + b"}'
+```
+
+**Response (201):**
+```json
+{
+  "id": "abc-123",
+  "name": "Calculator",
+  "language": "python",
+  "type": "execution",
+  "createdAt": "2024-01-15T10:30:00.000Z"
+}
+```
+
+### Iniciar Servicio
+
+**Request:**
+```bash
+curl -X POST http://localhost:3000/api/services/{id}/start
+```
+
+**Response (200):**
+```json
+{
+  "message": "Service started successfully",
+  "status": "running",
+  "endpoint": "http://localhost:3000/{id}",
+  "port": 45629
+}
+```
+
+### Ver Estado
+
+**Request:**
+```bash
+curl http://localhost:3000/api/services/{id}/status
+```
+
+**Response (200):**
+```json
+{
+  "serviceId": "{id}",
+  "status": "running",
+  "endpoint": "http://localhost:3000/{id}",
+  "port": 45629
+}
+```
+
+### Invocar con Parámetros
+
+**Request:**
+```bash
+curl -X POST http://localhost:3000/api/services/{id}/invoke \
+  -H "Content-Type: application/json" \
+  -d '{"a": 5, "b": 10}'
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "result": 15
+}
+```
+
+##  Tipos de Servicios
+
+### Execution
+Servicios estándar que ejecutan código personalizado.
+
+```json
+{
+  "name": "Calculator",
+  "type": "execution",
+  "language": "python",
+  "code": "def add(a, b): return a + b"
+}
+```
+
+### Roble
+Servicios integrados con Roble para bases de datos.
+
+```json
+{
+  "name": "Database Service",
+  "type": "roble",
+  "tokenDatabase": "tu_token",
+  "code": "SELECT * FROM users"
+}
+```
+
+## Arquitectura
+
+### Diagrama del Sistema
+
+```
+Usuario → Dashboard → API Routes → Container Manager → Docker Engine
+```
+
+### Componentes
+
+| Componente | Función |
+|------------|---------|
+| **Dashboard (Next.js)** | Interfaz web para gestionar servicios |
+| **API Routes** | Endpoints REST para control |
+| **Container Manager** | Gestión de contenedores Docker |
+| **Docker Engine** | Ejecución de contenedores |
+
+### Estructura del Proyecto
+
+```
+micro_services/
+├── app/              # Next.js App Router
+│   ├── api/         # API endpoints
+│   └── page.tsx     # Dashboard
+├── components/       # React components
+├── lib/             # Lógica de negocio
+│   ├── backend/    # Container manager, validators
+│   └── docker/     # Dockerfile generation
+└── docker-compose.yml
+```
+
+### Contenedores
+
+| Característica | Valor |
+|----------------|-------|
+| **Nombre** | `microservice-{id}` |
+| **Red** | `microservices_net` |
+| **Puerto** | Dinámico (base 45000) |
+| **Restart** | `unless-stopped` |
+| **Health Check** | 30s |
+
+##  Scripts
+
+```bash
+npm run dev      # Desarrollo
+npm run build    # Build producción
+npm start        # Servidor producción
+npm run lint     # Linter
+```
+
+##  Cómo Funcionan los Contenedores
+
+### Flujo de Creación
+
+1. Usuario crea servicio → Sistema genera Dockerfile
+2. Docker construye imagen → Crea contenedor → Inicia
+3. Health checks cada 30s → Auto-restart si falla
+
+### Estructura del Contenedor
+
+```
+microservice-{id}/
+├── Dockerfile
+├── main.py/index.js
+├── requirements.txt
+└── /app
+```
+
+### Endpoints del Contenedor
+
+- `GET /` - Info del servicio
+- `GET /health` - Health check
+- `POST /execute` - Ejecutar código
+
+##  Construcción y Ejecución de Contenedores
+
+### Opción 1: Dashboard (Recomendado)
+
+1. Ve a `http://localhost:3000`
+2. Completa el formulario
+3. Haz clic en "Create Service"
+4. El contenedor se construye y ejecuta automáticamente
+
+### Opción 2: API
+
+```bash
+# Crear servicio
+curl -X POST http://localhost:3000/api/services \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Mi Servicio", "language": "python", "type": "execution", "code": "print(\"Hello\")"}'
+
+# Iniciar (construye y ejecuta)
+curl -X POST http://localhost:3000/api/services/{id}/start
+```
+
+### Opción 3: Docker Manual
+
+```bash
+# Crear red
+docker network create microservices_net
+
+# Construir imagen
+docker build -t microservice-example -f Dockerfile.example .
+
+# Ejecutar contenedor
+docker run -d \
+  --name microservice-example \
+  --network microservices_net \
+  -p 45000:3000 \
+  --restart unless-stopped \
+  microservice-example
+
+# Ver logs
+docker logs -f microservice-example
+
+# Detener
+docker stop microservice-example
+docker rm microservice-example
+```
+
+### Docker Compose
+
+```bash
+# Ejecutar
+docker-compose -f docker-compose.example.yml up -d
+
+# Ver logs
+docker-compose -f docker-compose.example.yml logs -f
+
+# Detener
+docker-compose -f docker-compose.example.yml down
+```
+
+### Comandos Docker Útiles
+
+```bash
+docker ps                        # Ver contenedores corriendo
+docker logs -f {id}              # Ver logs en tiempo real
+docker stop {id}                 # Detener contenedor
+docker rm {id}                   # Eliminar contenedor
+docker stats {id}                # Ver uso de recursos
+docker network ls                # Ver redes
+docker system prune              # Limpiar recursos no usados
+```
+
+
+##  Troubleshooting
+
+| Problema | Solución |
+|----------|----------|
+| Docker no corre | `sudo systemctl start docker` o iniciar Docker Desktop |
+| Puerto ocupado | Cambiar `SERVICE_BASE_PORT` en `.env.local` |
+| Permisos Docker | `sudo usermod -aG docker $USER` |
+| Contenedor no inicia | `docker logs microservice-{id}` |
+| Red no existe | `docker network create microservices_net` |
+| Variables no cargan | Verificar que `.env.local` existe |
+| Servicios no crean | Verificar `ENABLE_DOCKER_RUNTIME=true` |
