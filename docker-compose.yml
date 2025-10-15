@@ -31,6 +31,22 @@ services:
     restart: unless-stopped
     networks:
       - microservices-network
+  3d9238d2-e440-4b36-b1bf-81de7e5aef27:
+    container_name: microservice-3d9238d2-e440-4b36-b1bf-81de7e5aef27
+    build:
+      context: ./services/service-3d9238d2-e440-4b36-b1bf-81de7e5aef27
+      dockerfile: ../../dockerfiles/Dockerfile.3d9238d2-e440-4b36-b1bf-81de7e5aef27
+    ports:
+      - 45722:3000
+    environment:
+      SERVICE_NAME: personas
+      SERVICE_TYPE: roble
+      TABLE_NAME: personas
+    env_file:
+      - .env.local
+    restart: unless-stopped
+    networks:
+      - microservices-network
 networks:
   microservices-network:
     driver: bridge

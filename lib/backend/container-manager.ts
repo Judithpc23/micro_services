@@ -263,19 +263,44 @@ class ContainerManager {
 					const servicePort = 3000 + parseInt(service.id.slice(-4), 16) % 1000 + 1000
 					this.log.info(`🐍 Ejecutando servidor Python en puerto ${servicePort}...`)
 					
+					// Prepare environment variables for Roble services
+					const envVars: any = { 
+						...process.env, 
+						PORT: servicePort.toString(),
+						// Variables específicas del servicio (no sensibles)
+						TABLE_NAME: service.tableName || 'microservices',
+						SERVICE_NAME: service.name,
+						SERVICE_TYPE: service.type
+					}
+
+					// Add Roble-specific credentials based on mode
+					if (service.type === "roble") {
+						envVars.ROBLE_MODE = service.robleMode || 'current'
+						
+						if (service.robleMode === 'different') {
+							// Use form credentials for different project mode
+							if (service.robleContract) {
+								envVars.ROBLE_SERVICE_CONTRACT = service.robleContract
+							}
+							if (service.robleEmail) {
+								envVars.ROBLE_SERVICE_EMAIL = service.robleEmail
+							}
+							if (service.roblePassword) {
+								envVars.ROBLE_SERVICE_PASSWORD = service.roblePassword
+							}
+							if (service.robleToken) {
+								envVars.ROBLE_SERVICE_TOKEN = service.robleToken
+							}
+						}
+						// For 'current' mode, the generated server will use standard env vars
+					}
+
 					// Start the server process
 					const serverProcess = spawn('python', ['main.py'], {
 						cwd: serviceDir,
-						env: { 
-							...process.env, 
-							PORT: servicePort.toString(),
-							// Variables específicas del servicio (no sensibles)
-							TABLE_NAME: service.tableName || 'microservices',
-							SERVICE_NAME: service.name,
-							SERVICE_TYPE: service.type
-						},
+						env: envVars,
 						detached: false
-					})
+					}) as any
 					
 					// Store the process for cleanup
 					this.containers.set(service.id, {
@@ -286,11 +311,11 @@ class ContainerManager {
 						process: serverProcess
 					})
 					
-					serverProcess.on('error', (error) => {
+					serverProcess.on('error', (error: any) => {
 						this.log.error(`❌ Error ejecutando servidor Python:`, error)
 					})
 					
-					serverProcess.on('exit', (code) => {
+					serverProcess.on('exit', (code: any) => {
 						this.log.info(`🔚 Servidor Python terminado con código ${code}`)
 					})
 					
@@ -310,19 +335,44 @@ class ContainerManager {
 					const servicePort = 3000 + parseInt(service.id.slice(-4), 16) % 1000 + 1000
 					this.log.info(`🟢 Ejecutando servidor Node.js en puerto ${servicePort}...`)
 					
+					// Prepare environment variables for Roble services
+					const envVars: any = { 
+						...process.env, 
+						PORT: servicePort.toString(),
+						// Variables específicas del servicio (no sensibles)
+						TABLE_NAME: service.tableName || 'microservices',
+						SERVICE_NAME: service.name,
+						SERVICE_TYPE: service.type
+					}
+
+					// Add Roble-specific credentials based on mode
+					if (service.type === "roble") {
+						envVars.ROBLE_MODE = service.robleMode || 'current'
+						
+						if (service.robleMode === 'different') {
+							// Use form credentials for different project mode
+							if (service.robleContract) {
+								envVars.ROBLE_SERVICE_CONTRACT = service.robleContract
+							}
+							if (service.robleEmail) {
+								envVars.ROBLE_SERVICE_EMAIL = service.robleEmail
+							}
+							if (service.roblePassword) {
+								envVars.ROBLE_SERVICE_PASSWORD = service.roblePassword
+							}
+							if (service.robleToken) {
+								envVars.ROBLE_SERVICE_TOKEN = service.robleToken
+							}
+						}
+						// For 'current' mode, the generated server will use standard env vars
+					}
+
 					// Start the server process
 					const serverProcess = spawn('node', ['index.js'], {
 						cwd: serviceDir,
-						env: { 
-							...process.env, 
-							PORT: servicePort.toString(),
-							// Variables específicas del servicio (no sensibles)
-							TABLE_NAME: service.tableName || 'microservices',
-							SERVICE_NAME: service.name,
-							SERVICE_TYPE: service.type
-						},
+						env: envVars,
 						detached: false
-					})
+					}) as any
 					
 					// Store the process for cleanup
 					this.containers.set(service.id, {
@@ -333,11 +383,11 @@ class ContainerManager {
 						process: serverProcess
 					})
 					
-					serverProcess.on('error', (error) => {
+					serverProcess.on('error', (error: any) => {
 						this.log.error(`❌ Error ejecutando servidor Node.js:`, error)
 					})
 					
-					serverProcess.on('exit', (code) => {
+					serverProcess.on('exit', (code: any) => {
 						this.log.info(`🔚 Servidor Node.js terminado con código ${code}`)
 					})
 					

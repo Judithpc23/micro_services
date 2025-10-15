@@ -254,9 +254,9 @@ roble = RobleClient(ROBLE_BASE_URL, ROBLE_CONTRACT)
 def home():
     return jsonify({
         "message": "Roble Service ready",
-        "serviceId": "b348187f-4a8b-4c5b-85a7-6e1a72e9d1f4",
+        "serviceId": "3d9238d2-e440-4b36-b1bf-81de7e5aef27",
         "tableName": TABLE_NAME,
-        "endpoint": f"http://localhost:3000/b348187f-4a8b-4c5b-85a7-6e1a72e9d1f4",
+        "endpoint": f"http://localhost:3000/3d9238d2-e440-4b36-b1bf-81de7e5aef27",
         "status": "running"
     })
 

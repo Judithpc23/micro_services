@@ -340,22 +340,42 @@ def get_optional_env(key: str, default: str = None) -> str:
 # Cargar configuración con validación
 try:
     ROBLE_BASE_URL = get_required_env('ROBLE_BASE_HOST', 'URL base de la API de Roble')
-    ROBLE_CONTRACT = get_required_env('ROBLE_CONTRACT', 'Contrato de Roble')
     TABLE_NAME = get_required_env('TABLE_NAME', 'Nombre de la tabla')
-    ROBLE_USER_EMAIL = get_optional_env('ROBLE_USER_EMAIL')
-    ROBLE_USER_PASSWORD = get_optional_env('ROBLE_USER_PASSWORD')
-    ROBLE_TOKEN = get_optional_env('ROBLE_TOKEN')
     ROBLE_MODE = get_optional_env('ROBLE_MODE', 'current')
     
-    print(f"✅ Configuración Roble cargada:")
-    print(f"   - Base URL: {ROBLE_BASE_URL}")
-    print(f"   - Contract: {ROBLE_CONTRACT}")
-    print(f"   - Table: {TABLE_NAME}")
-    print(f"   - Mode: {ROBLE_MODE}")
+    # Cargar configuración según el modo
+    if ROBLE_MODE == 'different':
+        # Para modo 'different', usar credenciales específicas del servicio
+        ROBLE_CONTRACT = get_required_env('ROBLE_SERVICE_CONTRACT', 'Contrato específico del servicio')
+        ROBLE_USER_EMAIL = get_optional_env('ROBLE_SERVICE_EMAIL')
+        ROBLE_USER_PASSWORD = get_optional_env('ROBLE_SERVICE_PASSWORD')
+        ROBLE_TOKEN = get_optional_env('ROBLE_SERVICE_TOKEN')
+        print(f"✅ Configuración Roble (modo diferente proyecto):")
+        print(f"   - Base URL: {ROBLE_BASE_URL}")
+        print(f"   - Contract: {ROBLE_CONTRACT}")
+        print(f"   - Table: {TABLE_NAME}")
+        print(f"   - Mode: {ROBLE_MODE}")
+        print(f"   - Email configurado: {bool(ROBLE_USER_EMAIL)}")
+        print(f"   - Password configurado: {bool(ROBLE_USER_PASSWORD)}")
+        print(f"   - Token configurado: {bool(ROBLE_TOKEN)}")
+    else:
+        # Para modo 'current', usar credenciales globales del entorno
+        ROBLE_CONTRACT = get_required_env('ROBLE_CONTRACT', 'Contrato global de Roble')
+        ROBLE_USER_EMAIL = get_optional_env('ROBLE_USER_EMAIL')
+        ROBLE_USER_PASSWORD = get_optional_env('ROBLE_USER_PASSWORD')
+        ROBLE_TOKEN = get_optional_env('ROBLE_TOKEN')
+        print(f"✅ Configuración Roble (modo proyecto actual):")
+        print(f"   - Base URL: {ROBLE_BASE_URL}")
+        print(f"   - Contract: {ROBLE_CONTRACT}")
+        print(f"   - Table: {TABLE_NAME}")
+        print(f"   - Mode: {ROBLE_MODE}")
     
 except ValueError as e:
     print(f"❌ Error de configuración: {e}")
-    print("💡 Asegúrate de tener las variables requeridas en .env.local")
+    if ROBLE_MODE == 'different':
+        print("💡 Para modo 'different', asegúrate de proporcionar ROBLE_SERVICE_CONTRACT y credenciales en el formulario")
+    else:
+        print("💡 Asegúrate de tener las variables requeridas en .env.local")
     raise
 
 # Cliente Roble para operaciones de base de datos
@@ -405,6 +425,7 @@ class RobleClient:
         print(f"DEBUG: Intentando autenticar en: {auth_url}")
         print(f"DEBUG: Email: {self._email}")
         print(f"DEBUG: Password configurado: {bool(self._password)}")
+        print(f"DEBUG: Contract: {self.contract}")
         
         try:
             response = requests.post(auth_url, json=auth_data)
@@ -414,9 +435,20 @@ class RobleClient:
             if response.ok:
                 auth_result = response.json()
                 self._token = auth_result.get('accessToken')
+                print(f"DEBUG: Autenticación exitosa, token obtenido")
                 return self._token
             else:
-                raise Exception(f"Error de autenticación: {response.status_code} - {response.text}")
+                # Proporcionar información más específica sobre el error
+                error_detail = response.text
+                if response.status_code == 401:
+                    if "no verificado" in error_detail.lower() or "not verified" in error_detail.lower():
+                        raise Exception(f"Error 401: El usuario {self._email} no está verificado. Verifica tu email en Roble antes de continuar.")
+                    elif "no encontrado" in error_detail.lower() or "not found" in error_detail.lower():
+                        raise Exception(f"Error 401: El usuario {self._email} no existe en Roble. Crea una cuenta primero.")
+                    else:
+                        raise Exception(f"Error 401: Credenciales incorrectas para {self._email}. Verifica email y contraseña.")
+                else:
+                    raise Exception(f"Error de autenticación: {response.status_code} - {error_detail}")
         except Exception as e:
             raise Exception(f"Error conectando con Roble: {str(e)}")
     
@@ -639,22 +671,44 @@ function generateRobleExpressServer(service: Microservice): string {
   
   try {
     ROBLE_BASE_URL = getRequiredEnv('ROBLE_BASE_HOST', 'URL base de la API de Roble');
-    DEFAULT_DBNAME = getRequiredEnv('ROBLE_CONTRACT', 'Contrato de Roble');
     TABLE_NAME = getRequiredEnv('TABLE_NAME', 'Nombre de la tabla');
-    ROBLE_EMAIL = getOptionalEnv('ROBLE_USER_EMAIL');
-    ROBLE_PASSWORD = getOptionalEnv('ROBLE_USER_PASSWORD');
-    ROBLE_TOKEN = getOptionalEnv('ROBLE_TOKEN');
     ROBLE_MODE = getOptionalEnv('ROBLE_MODE', 'current');
     
-    console.log('✅ Configuración Roble cargada:');
-    console.log(\`   - Base URL: \${ROBLE_BASE_URL}\`);
-    console.log(\`   - Contract: \${DEFAULT_DBNAME}\`);
-    console.log(\`   - Table: \${TABLE_NAME}\`);
-    console.log(\`   - Mode: \${ROBLE_MODE}\`);
+    // Cargar configuración según el modo
+    if (ROBLE_MODE === 'different') {
+      // Para modo 'different', usar credenciales específicas del servicio
+      DEFAULT_DBNAME = getRequiredEnv('ROBLE_SERVICE_CONTRACT', 'Contrato específico del servicio');
+      ROBLE_EMAIL = getOptionalEnv('ROBLE_SERVICE_EMAIL');
+      ROBLE_PASSWORD = getOptionalEnv('ROBLE_SERVICE_PASSWORD');
+      ROBLE_TOKEN = getOptionalEnv('ROBLE_SERVICE_TOKEN');
+      console.log('✅ Configuración Roble (modo diferente proyecto):');
+      console.log(\`   - Base URL: \${ROBLE_BASE_URL}\`);
+      console.log(\`   - Contract: \${DEFAULT_DBNAME}\`);
+      console.log(\`   - Table: \${TABLE_NAME}\`);
+      console.log(\`   - Mode: \${ROBLE_MODE}\`);
+      console.log(\`   - Email configurado: \${!!ROBLE_EMAIL}\`);
+      console.log(\`   - Password configurado: \${!!ROBLE_PASSWORD}\`);
+      console.log(\`   - Token configurado: \${!!ROBLE_TOKEN}\`);
+    } else {
+      // Para modo 'current', usar credenciales globales del entorno
+      DEFAULT_DBNAME = getRequiredEnv('ROBLE_CONTRACT', 'Contrato global de Roble');
+      ROBLE_EMAIL = getOptionalEnv('ROBLE_USER_EMAIL');
+      ROBLE_PASSWORD = getOptionalEnv('ROBLE_USER_PASSWORD');
+      ROBLE_TOKEN = getOptionalEnv('ROBLE_TOKEN');
+      console.log('✅ Configuración Roble (modo proyecto actual):');
+      console.log(\`   - Base URL: \${ROBLE_BASE_URL}\`);
+      console.log(\`   - Contract: \${DEFAULT_DBNAME}\`);
+      console.log(\`   - Table: \${TABLE_NAME}\`);
+      console.log(\`   - Mode: \${ROBLE_MODE}\`);
+    }
     
   } catch (error) {
     console.error(\`❌ Error de configuración: \${error.message}\`);
-    console.log('💡 Asegúrate de tener las variables requeridas en .env.local');
+    if (ROBLE_MODE === 'different') {
+      console.log('💡 Para modo \\'different\\', asegúrate de proporcionar ROBLE_SERVICE_CONTRACT y credenciales en el formulario');
+    } else {
+      console.log('💡 Asegúrate de tener las variables requeridas en .env.local');
+    }
     process.exit(1);
   }
   
@@ -692,19 +746,34 @@ function generateRobleExpressServer(service: Microservice): string {
       
       console.log('DEBUG: Intentando autenticar en:', \`\${ROBLE_BASE_URL}\${authUrl}\`);
       console.log('DEBUG: Email:', ROBLE_EMAIL);
+      console.log('DEBUG: Contract:', DEFAULT_DBNAME);
       
       try {
         const response = await http.post(authUrl, authData);
         console.log('DEBUG: Response status:', response.status);
+        console.log('DEBUG: Response data:', JSON.stringify(response.data).substring(0, 200));
         
         if (response.ok) {
           const authResult = response.data;
           this._accessToken = authResult.accessToken;
           this._refreshToken = authResult.refreshToken;
           this._tokenExpiry = Date.now() + (24 * 60 * 60 * 1000); // 24 horas
+          console.log('DEBUG: Autenticación exitosa, token obtenido');
           return this._accessToken;
         } else {
-          throw new Error(\`Error de autenticación: \${response.status} - \${response.data}\`);
+          // Proporcionar información más específica sobre el error
+          const errorDetail = JSON.stringify(response.data);
+          if (response.status === 401) {
+            if (errorDetail.toLowerCase().includes('no verificado') || errorDetail.toLowerCase().includes('not verified')) {
+              throw new Error(\`Error 401: El usuario \${ROBLE_EMAIL} no está verificado. Verifica tu email en Roble antes de continuar.\`);
+            } else if (errorDetail.toLowerCase().includes('no encontrado') || errorDetail.toLowerCase().includes('not found')) {
+              throw new Error(\`Error 401: El usuario \${ROBLE_EMAIL} no existe en Roble. Crea una cuenta primero.\`);
+            } else {
+              throw new Error(\`Error 401: Credenciales incorrectas para \${ROBLE_EMAIL}. Verifica email y contraseña.\`);
+            }
+          } else {
+            throw new Error(\`Error de autenticación: \${response.status} - \${errorDetail}\`);
+          }
         }
       } catch (error) {
         throw new Error(\`Error conectando con Roble: \${error.message}\`);
