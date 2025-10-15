@@ -458,13 +458,18 @@ class ContainerManager {
 
 			// create & start container
 			const binds: string[] = []
-			const env: string[] = []
-			if (service.type === "roble" && service.tableName) env.push(`TABLE_NAME=${service.tableName}`)
-			if (service.type === "roble" && service.robleContract) env.push(`ROBLE_CONTRACT=${service.robleContract}`)
-			if (service.type === "roble" && service.robleToken) env.push(`ROBLE_TOKEN=${service.robleToken}`)
+
+			// Load environment variables from .env.local
+			const envVars = await this.loadEnvFile()
+
+			// Add service-specific variables (these override .env.local if duplicated)
+			if (service.type === "roble" && service.tableName) envVars["TABLE_NAME"] = service.tableName
+			if (service.type === "roble" && service.robleContract) envVars["ROBLE_CONTRACT"] = service.robleContract
+			if (service.type === "roble" && service.robleToken) envVars["ROBLE_TOKEN"] = service.robleToken
+
+			// Convert to Docker env format: ["KEY=value", ...]
+			const env = Object.entries(envVars).map(([key, value]) => `${key}=${value}`)
 			
-			// Variables de entorno se cargan desde .env.local via docker-compose
-			// No se pasan variables sensibles individualmente por seguridad
 			const created = await this.docker.createContainer({
 				name: containerName,
 				Image: `microservice-${service.id}:latest`,
@@ -599,6 +604,36 @@ class ContainerManager {
 		}
 	}
 	
+	private async loadEnvFile(): Promise<Record<string, string>> {
+		const envPath = path.join(process.cwd(), ".env.local")
+		const envVars: Record<string, string> = {}
+		
+		try {
+		  const content = await fs.readFile(envPath, "utf8")
+		  const lines = content.split('\n')
+		  
+		  for (const line of lines) {
+			const trimmed = line.trim()
+			if (!trimmed || trimmed.startsWith('#')) continue
+			
+			const match = trimmed.match(/^([^=]+)=(.*)$/)
+			if (match) {
+			  const key = match[1].trim()
+			  let value = match[2].trim()
+			  // Remove quotes if present
+			  if ((value.startsWith('"') && value.endsWith('"')) || 
+				  (value.startsWith("'") && value.endsWith("'"))) {
+				value = value.slice(1, -1)
+			  }
+			  envVars[key] = value
+			}
+		  }
+		} catch (err) {
+		  this.log.warn("Could not load .env.local file", { err })
+		}
+		
+		return envVars
+	  }
 	// Función createServiceEnvFile eliminada - las variables se pasan via env_file en docker-compose
 }
 

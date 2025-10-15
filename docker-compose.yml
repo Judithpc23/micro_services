@@ -1,15 +1,31 @@
 services:
-  88be4d2f-a722-45aa-8302-1849f16499a5:
-    container_name: microservice-88be4d2f-a722-45aa-8302-1849f16499a5
+  27d88f96-90d8-4aa5-a4f6-4c697036a8eb:
+    container_name: microservice-27d88f96-90d8-4aa5-a4f6-4c697036a8eb
     build:
-      context: ./services/service-88be4d2f-a722-45aa-8302-1849f16499a5
-      dockerfile: ../../dockerfiles/Dockerfile.88be4d2f-a722-45aa-8302-1849f16499a5
+      context: ./services/service-27d88f96-90d8-4aa5-a4f6-4c697036a8eb
+      dockerfile: ../../dockerfiles/Dockerfile.27d88f96-90d8-4aa5-a4f6-4c697036a8eb
     ports:
-      - 45134:3000
+      - 45497:3000
     environment:
-      SERVICE_NAME: prueba roble
+      SERVICE_NAME: leertabla
       SERVICE_TYPE: roble
       TABLE_NAME: microservices
+    env_file:
+      - .env.local
+    restart: unless-stopped
+    networks:
+      - microservices-network
+  b348187f-4a8b-4c5b-85a7-6e1a72e9d1f4:
+    container_name: microservice-b348187f-4a8b-4c5b-85a7-6e1a72e9d1f4
+    build:
+      context: ./services/service-b348187f-4a8b-4c5b-85a7-6e1a72e9d1f4
+      dockerfile: ../../dockerfiles/Dockerfile.b348187f-4a8b-4c5b-85a7-6e1a72e9d1f4
+    ports:
+      - 45046:3000
+    environment:
+      SERVICE_NAME: leerpersonas
+      SERVICE_TYPE: roble
+      TABLE_NAME: personas
     env_file:
       - .env.local
     restart: unless-stopped

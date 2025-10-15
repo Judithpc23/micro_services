@@ -222,9 +222,9 @@ roble = RobleClient(ROBLE_BASE_URL, ROBLE_CONTRACT)
 def home():
     return jsonify({
         "message": "Roble Service ready",
-        "serviceId": "88be4d2f-a722-45aa-8302-1849f16499a5",
+        "serviceId": "b348187f-4a8b-4c5b-85a7-6e1a72e9d1f4",
         "tableName": TABLE_NAME,
-        "endpoint": f"http://localhost:3000/88be4d2f-a722-45aa-8302-1849f16499a5",
+        "endpoint": f"http://localhost:3000/b348187f-4a8b-4c5b-85a7-6e1a72e9d1f4",
         "status": "running"
     })
 
@@ -274,6 +274,7 @@ def execute():
             return {
                 "message": "Roble microservice executed successfully",
                 "records_count": len(records),
+                "records": records,
                 "status": "completed"
             }
         

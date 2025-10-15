@@ -1,13 +1,27 @@
 [
   {
-    "id": "88be4d2f-a722-45aa-8302-1849f16499a5",
-    "name": "prueba roble",
-    "description": "...",
+    "id": "27d88f96-90d8-4aa5-a4f6-4c697036a8eb",
+    "name": "leertabla",
+    "description": "lee la tabla",
     "language": "python",
-    "code": "# Roble Microservice - Python\n# This service can interact with your Roble database\n\ndef main():\n    # Example: Read all records from the table\n    records = read_data()\n    print(f\"Found {len(records)} records\")\n    \n    # Process the records as needed\n    for record in records:\n        print(f\"Record ID: {record.get('_id')}\")\n        print(f\"Data: {record}\")\n    \n    return {\n        \"message\": \"Roble microservice executed successfully\",\n        \"records_count\": len(records),\n        \"status\": \"completed\"\n    }\n\n# Available helper functions:\n# - read_data(filters=None): Read records from the table\n# - insert_data(records): Insert new records\n# - update_data(record_id, updates): Update a specific record\n# - delete_data(record_id): Delete a specific record",
+    "code": "# Roble Microservice - Python\n# This service can interact with your Roble database\n\ndef main():\n    # Example: Read all records from the table\n    records = read_data()\n    print(f\"Found {len(records)} records\")\n    \n    # Process the records as needed\n    for record in records:\n        print(f\"Record ID: {record.get('_id')}\")\n        print(f\"Data: {record}\")\n    \n    return {\n        \"message\": \"Roble microservice executed successfully\",\n        \"records_count\": len(records),\n        \"records\": records,\n        \"status\": \"completed\"\n    }\n\n# Available helper functions:\n# - read_data(filters=None): Read records from the table\n# - insert_data(records): Insert new records\n# - update_data(record_id, updates): Update a specific record\n# - delete_data(record_id): Delete a specific record",
     "type": "roble",
     "tableName": "microservices",
     "robleMode": "current",
-    "createdAt": "2025-10-15T00:37:42.866Z"
+    "createdAt": "2025-10-15T03:29:55.600Z"
+  },
+  {
+    "id": "b348187f-4a8b-4c5b-85a7-6e1a72e9d1f4",
+    "name": "leerpersonas",
+    "description": "lee personas",
+    "language": "python",
+    "code": "# Roble Microservice - Python\n# This service can interact with your Roble database\n\ndef main():\n    # Example: Read all records from the table\n    records = read_data()\n    print(f\"Found {len(records)} records\")\n    \n    # Process the records as needed\n    for record in records:\n        print(f\"Record ID: {record.get('_id')}\")\n        print(f\"Data: {record}\")\n    \n    return {\n        \"message\": \"Roble microservice executed successfully\",\n        \"records_count\": len(records),\n        \"records\": records,\n        \"status\": \"completed\"\n    }\n\n# Available helper functions:\n# - read_data(filters=None): Read records from the table\n# - insert_data(records): Insert new records\n# - update_data(record_id, updates): Update a specific record\n# - delete_data(record_id): Delete a specific record",
+    "type": "roble",
+    "tableName": "personas",
+    "robleContract": "micro_services_c9831a5f3a",
+    "robleEmail": "personas@gmail.com",
+    "roblePassword": "Contraseña123!",
+    "robleMode": "different",
+    "createdAt": "2025-10-15T03:52:23.063Z"
   }
 ]
