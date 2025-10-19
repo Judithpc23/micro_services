@@ -83,6 +83,34 @@ npm run dev
 
 Abre `http://localhost:3000` y ¡listo! 
 
+## 🚀 Despliegue con Docker Compose
+
+Despliega la plataforma en modo producción local utilizando Docker Compose.
+
+1. **Prepara el entorno**
+  - Copia `.env.example` a `.env` y completa las variables obligatorias (Docker y Roble).
+
+2. **Construye y levanta los contenedores**
+
+```bash
+docker compose up -d --build
+```
+
+3. **Verifica que todo está en marcha**
+
+```bash
+docker compose ps
+docker logs -f microservices-web
+```
+
+4. **Detén los servicios cuando termines**
+
+```bash
+docker compose down
+```
+
+La aplicación quedará disponible en `http://localhost:3000` lista para gestionar tus microservicios.
+
 ### Crear tu Primer Microservicio
 
 1. Ve al dashboard en `http://localhost:3000`
@@ -254,6 +282,12 @@ function process_data(data) {
 ```
 
 #### Servicios Roble (Solo Python)
+
+> **Variables necesarias**
+>
+> Para que un servicio Roble funcione debes definir en el formulario las variables `ROBLE_CONTRACT`, `ROBLE_USER_EMAIL` y `ROBLE_USER_PASSWORD` (Debe ser un usuario tipo administrador). Si utilizas autenticación por token, agrega `ROBLE_TOKEN` y ademas las tabla que deseas consultar. Estos valores permiten que la plataforma se conecte al proyecto de Roble correspondiente cuando el microservicio se despliega.
+
+Cada servicio se crea con una función de prueba `main()` que puedes ejecutar inmediatamente para validar la conexión y la lectura de datos.
 
 **Ejemplo 1: Lectura de Datos**
 ```python

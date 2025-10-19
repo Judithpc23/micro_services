@@ -33,7 +33,7 @@ export function CreateServiceForm({
   const [type, setType] = useState<ServiceType>("execution")
   
   // Roble configuration states
-  const [robleMode, setRobleMode] = useState<"current" | "different">("current")
+  const [robleMode, setRobleMode] = useState<"current" | "different">("different")
   const [robleContract, setRobleContract] = useState("")
   const [robleEmail, setRobleEmail] = useState("")
   const [roblePassword, setRoblePassword] = useState("")
@@ -51,7 +51,7 @@ export function CreateServiceForm({
       setCode(editingService.code)
       setType(editingService.type)
       // Prefill Roble fields if present
-      setRobleMode(editingService.robleMode || "current")
+  setRobleMode(editingService.robleMode === "current" ? "current" : "different")
       setRobleContract(editingService.robleContract || "")
       setRobleEmail(editingService.robleEmail || "")
       setRoblePassword(editingService.roblePassword || "")
@@ -64,7 +64,7 @@ export function CreateServiceForm({
       setCode("")
       setLanguage("python")
       setType("execution")
-      setRobleMode("current")
+  setRobleMode("different")
       setRobleContract("")
       setRobleEmail("")
       setRoblePassword("")
@@ -330,59 +330,18 @@ async function main() {
             <div className="space-y-4 border rounded-lg p-4 bg-muted/50">
               <h4 className="font-medium text-sm">Roble Configuration</h4>
               
-              {/* Modo de Configuración */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Configuration Mode</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setRobleMode("current")}
-                    disabled={isSubmitting}
-                    className={`rounded-md border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
-                      robleMode === "current"
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border bg-input text-muted-foreground hover:bg-secondary"
-                    }`}
-                  >
-                    Current Project
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRobleMode("different")}
-                    disabled={isSubmitting}
-                    className={`rounded-md border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
-                      robleMode === "different"
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border bg-input text-muted-foreground hover:bg-secondary"
-                    }`}
-                  >
-                    Different Project
-                  </button>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {robleMode === "current" 
-                    ? "Use current project configuration from environment variables"
-                    : "Configure a different Roble project with custom credentials"
-                  }
-                </p>
-              </div>
-
-              {/* Modo Current Project */}
-              {robleMode === "current" && (
+              {robleMode === "current" ? (
                 <div className="space-y-4">
                   <div className="text-sm text-muted-foreground p-2 bg-muted rounded">
-                    Using environment variables: ROBLE_BASE_HOST, ROBLE_CONTRACT, ROBLE_USER_EMAIL, ROBLE_USER_PASSWORD
+                    This service uses the project-level Roble credentials defined in your environment variables.
+                    Update the service to switch to a custom project.
                   </div>
-                  
                   <RobleTableSelector
                     onTableSelect={setSelectedTable}
                     selectedTable={selectedTable}
                   />
                 </div>
-              )}
-
-              {/* Modo Different Project */}
-              {robleMode === "different" && (
+              ) : (
                 <div className="space-y-4">
                   {/* Contract */}
                   <div className="space-y-2">
