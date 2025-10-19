@@ -7,5 +7,34 @@
     "code": "def hola():\n    return \"Hola mundo\"",
     "type": "execution",
     "createdAt": "2025-10-18T23:24:01.719Z"
+  },
+  {
+    "id": "2e02beb3-2f41-4516-a87a-13afc2c46d95",
+    "name": "suma",
+    "description": "suma",
+    "language": "python",
+    "code": "def suma():\n    a = request.args.get('a', default=0, type=int)\n    b = request.args.get('b', default=0, type=int)\n    resultado = a + b\n    return f\"La suma de {a} y {b} es {resultado}\"",
+    "type": "execution",
+    "createdAt": "2025-10-19T02:46:42.116Z"
+  },
+  {
+    "id": "9050f5cc-661b-4083-9835-bd195c0c6005",
+    "name": "js",
+    "description": "js",
+    "language": "javascript",
+    "code": "function saludar() {\n    return \"Hola mundo desde JavaScript\";\n}",
+    "type": "execution",
+    "createdAt": "2025-10-19T02:48:19.466Z"
+  },
+  {
+    "id": "37eae364-dc17-4010-9b20-fee393e013b2",
+    "name": "roble",
+    "description": "roble",
+    "language": "python",
+    "code": "def main():\n    records = read_data()\n    print(f\"Found {len(records)} records\")\n    \n    for record in records:\n        print(f\"Record ID: {record.get('_id')}\")\n        print(f\"Data: {record}\")\n    \n    return {\n        \"message\": \"Roble microservice executed successfully\",\n        \"records_count\": len(records),\n        \"records\": records,\n        \"status\": \"completed\"\n    }",
+    "type": "roble",
+    "tableName": "microservices",
+    "robleMode": "current",
+    "createdAt": "2025-10-19T03:08:36.129Z"
   }
 ]

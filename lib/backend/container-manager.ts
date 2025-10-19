@@ -446,24 +446,11 @@ class ContainerManager {
 		try {
 			// Generate service files
 			const files = generateServiceFiles(service)
-			// lazy-load tar-stream and dockerode to avoid bundling native modules in Next
-			const tarMod = await import("tar-stream")
-			const pack = tarMod.pack()
-
-			// Add Dockerfile
-			pack.entry({ name: `Dockerfile.${service.id}` }, files.dockerfile)
-			// Add code file and dependencies
-			if (service.language === "python") {
-				pack.entry({ name: "main.py" }, files.code)
-				pack.entry({ name: "requirements.txt" }, files.dependencies)
-			} else {
-				pack.entry({ name: "index.js" }, files.code)
-				pack.entry({ name: "package.json" }, files.dependencies)
-			}
-			
 			// Guardar archivos físicos también en modo Docker para que se puedan ver
 			const serviceDir = path.join(process.cwd(), "services", `service-${service.id}`)
 			await fs.mkdir(serviceDir, { recursive: true })
+
+			await fs.writeFile(path.join(serviceDir, "Dockerfile"), files.dockerfile, "utf8")
 			
 			if (service.language === "python") {
 				await fs.writeFile(path.join(serviceDir, "main.py"), files.code, "utf8")
@@ -472,9 +459,23 @@ class ContainerManager {
 				await fs.writeFile(path.join(serviceDir, "index.js"), files.code, "utf8")
 				await fs.writeFile(path.join(serviceDir, "package.json"), files.dependencies, "utf8")
 			}
-			
+
+			// lazy-load tar-stream and dockerode to avoid bundler issues
+			const tarMod = await import("tar-stream")
+			const pack = tarMod.pack()
+
+			pack.entry({ name: "Dockerfile" }, files.dockerfile)
+			if (service.language === "python") {
+				pack.entry({ name: "main.py" }, files.code)
+				pack.entry({ name: "requirements.txt" }, files.dependencies)
+			} else {
+				pack.entry({ name: "index.js" }, files.code)
+				pack.entry({ name: "package.json" }, files.dependencies)
+			}
+
 			this.log.info("✅ Archivos físicos guardados para modo Docker")
 			pack.finalize()
+
 			// lazy-load dockerode
 			const dockerMod = await import("dockerode")
 			const Docker = dockerMod.default ?? dockerMod
@@ -482,8 +483,8 @@ class ContainerManager {
 
 			const buildStream = await this.docker.buildImage(pack, {
 				t: `microservice-${service.id}:latest`,
-				// Use Dockerfile name matching entry
-				dockerfile: `Dockerfile.${service.id}`,
+				// Use standard Dockerfile name within the tar context
+				dockerfile: "Dockerfile",
 			})
 
 			await new Promise((resolve, reject) => {
@@ -669,35 +670,43 @@ class ContainerManager {
 	}
 	
 	private async loadEnvFile(): Promise<Record<string, string>> {
-		const envPath = path.join(process.cwd(), ".env")
 		const envVars: Record<string, string> = {}
-		
-		try {
-		  const content = await fs.readFile(envPath, "utf8")
-		  const lines = content.split('\n')
-		  
-		  for (const line of lines) {
-			const trimmed = line.trim()
-			if (!trimmed || trimmed.startsWith('#')) continue
-			
-			const match = trimmed.match(/^([^=]+)=(.*)$/)
-			if (match) {
-			  const key = match[1].trim()
-			  let value = match[2].trim()
-			  // Remove quotes if present
-			  if ((value.startsWith('"') && value.endsWith('"')) || 
-				  (value.startsWith("'") && value.endsWith("'"))) {
-				value = value.slice(1, -1)
-			  }
-			  envVars[key] = value
+		const runtimeEnv = ((globalThis as any).process?.env ?? {}) as Record<string, string | undefined>
+
+		for (const [key, value] of Object.entries(runtimeEnv)) {
+			if (typeof value === "string") {
+				envVars[key] = value
 			}
-		  }
-		} catch (err) {
-		  this.log.warn("Could not load .env file", { err })
 		}
-		
+
+		const envPath = path.join(process.cwd(), ".env")
+
+		try {
+			const content = await fs.readFile(envPath, "utf8")
+			const lines = content.split('\n')
+
+			for (const line of lines) {
+				const trimmed = line.trim()
+				if (!trimmed || trimmed.startsWith('#')) continue
+
+				const match = trimmed.match(/^([^=]+)=(.*)$/)
+				if (match) {
+					const key = match[1].trim()
+					let value = match[2].trim()
+					if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith('\'') && value.endsWith('\''))) {
+						value = value.slice(1, -1)
+					}
+					envVars[key] = value
+				}
+			}
+		} catch (err: any) {
+			if (err?.code !== "ENOENT") {
+				this.log.warn("Could not load .env file", { err })
+			}
+		}
+
 		return envVars
-	  }
+	}
 	// Función createServiceEnvFile eliminada - las variables se pasan via env_file en docker-compose
 }
 
