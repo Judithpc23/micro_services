@@ -509,10 +509,10 @@ class ContainerManager {
 			// create & start container
 			const binds: string[] = []
 
-			// Load environment variables from .env.local
+			// Load environment variables from .env
 			const envVars = await this.loadEnvFile()
 
-			// Add service-specific variables (these override .env.local if duplicated)
+			// Add service-specific variables (these override .env if duplicated)
 			if (service.type === "roble") {
 				if (service.tableName) envVars["TABLE_NAME"] = service.tableName
 				// Always pass ROBLE_MODE so generated server selects the correct source
@@ -669,7 +669,7 @@ class ContainerManager {
 	}
 	
 	private async loadEnvFile(): Promise<Record<string, string>> {
-		const envPath = path.join(process.cwd(), ".env.local")
+		const envPath = path.join(process.cwd(), ".env")
 		const envVars: Record<string, string> = {}
 		
 		try {
@@ -693,7 +693,7 @@ class ContainerManager {
 			}
 		  }
 		} catch (err) {
-		  this.log.warn("Could not load .env.local file", { err })
+		  this.log.warn("Could not load .env file", { err })
 		}
 		
 		return envVars

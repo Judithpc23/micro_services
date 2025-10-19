@@ -1,4 +1,41 @@
-services:
+#version: "3.9"
+
+name: microservices_platform
+
 networks:
-  microservices-network:
-    driver: bridge
+  microservices_net:
+    external: true   # crea una vez: `docker network create microservices_net`
+
+services:
+  web:
+    user: "0:0"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: microservices-web
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env               # ya lo tienes en la raíz
+    environment:
+      NODE_ENV: production
+      ENABLE_DOCKER_RUNTIME: ${ENABLE_DOCKER_RUNTIME:-true}
+      DOCKER_NETWORK_NAME: ${DOCKER_NETWORK_NAME:-microservices_net}
+      PROXY_BASE_URL: ${PROXY_BASE_URL:-http://localhost:3000}
+      SERVICE_BASE_PORT: ${SERVICE_BASE_PORT:-45000}
+    # ⚠ Dev only: acceso al Docker Engine
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Persistir tu store local (.data/services.json) en el host:
+      - ./.data:/app/.data
+      - ./services:/app/services 
+    restart: unless-stopped
+    networks:
+      - microservices_net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/services || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    
+

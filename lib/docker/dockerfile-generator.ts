@@ -315,9 +315,9 @@ app = Flask(__name__)
 # Cargar variables de entorno usando python-dotenv
 from dotenv import load_dotenv
 
-# Cargar automáticamente desde .env.local (prioridad) o .env
-load_dotenv('.env.local')  # Intenta cargar .env.local primero
-load_dotenv('.env')         # Fallback a .env si .env.local no existe
+# Cargar automáticamente desde .env (prioridad) o .env
+load_dotenv('.env')  # Intenta cargar .env primero
+load_dotenv('.env')         # Fallback a .env si .env no existe
 load_dotenv()               # Fallback a archivo .env en directorio actual
 
 print("✅ Variables de entorno cargadas con python-dotenv")
@@ -375,7 +375,7 @@ except ValueError as e:
     if ROBLE_MODE == 'different':
         print("💡 Para modo 'different', asegúrate de proporcionar ROBLE_SERVICE_CONTRACT y credenciales en el formulario")
     else:
-        print("💡 Asegúrate de tener las variables requeridas en .env.local")
+        print("💡 Asegúrate de tener las variables requeridas en .env")
     raise
 
 # Cliente Roble para operaciones de base de datos
@@ -643,7 +643,7 @@ if __name__ == '__main__':
 function generateRobleExpressServer(service: Microservice): string {
     return `const express = require('express');
   const axios = require('axios');
-  require('dotenv').config({ path: '.env.local' }); // Cargar .env.local primero
+  require('dotenv').config({ path: '.env' }); // Cargar .env primero
   require('dotenv').config(); // Fallback a .env
   
   const app = express();
@@ -707,7 +707,7 @@ function generateRobleExpressServer(service: Microservice): string {
     if (ROBLE_MODE === 'different') {
       console.log('💡 Para modo \\'different\\', asegúrate de proporcionar ROBLE_SERVICE_CONTRACT y credenciales en el formulario');
     } else {
-      console.log('💡 Asegúrate de tener las variables requeridas en .env.local');
+      console.log('💡 Asegúrate de tener las variables requeridas en .env');
     }
     process.exit(1);
   }

@@ -71,7 +71,7 @@ def load_roble_config() -> RobleConfig:
         return RobleConfig.from_env()
     except ValueError as e:
         print(f"❌ Error de configuración: {e}")
-        print("💡 Asegúrate de tener las siguientes variables en .env.local:")
+        print("💡 Asegúrate de tener las siguientes variables en .env:")
         print("   - ROBLE_BASE_HOST")
         print("   - ROBLE_CONTRACT") 
         print("   - TABLE_NAME")

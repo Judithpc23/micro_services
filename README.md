@@ -74,7 +74,7 @@ cd micro_services
 npm install
 
 # 2. Configurar y crear red Docker
-cp .env.example .env.local  # Editar con tus credenciales
+cp .env.example .env  # Editar con tus credenciales
 docker network create microservices_net
 
 # 3. Ejecutar
@@ -122,7 +122,7 @@ cd micro_services
 npm install
 
 # 3. Configurar variables de entorno
-# Crea un archivo .env.local en la raíz del proyecto
+# Crea un archivo .env en la raíz del proyecto
 # Copia el contenido de la sección "Configuración" más abajo
 
 # 4. Crear red Docker (obligatorio)
@@ -157,7 +157,7 @@ sudo systemctl start docker
 
 ### Variables de Entorno
 
-Crea un archivo `.env.local` en la raíz del proyecto:
+Crea un archivo `.env` en la raíz del proyecto:
 
 ```env
 # Docker Configuration (Requerido)
@@ -581,9 +581,9 @@ docker system prune              # Limpiar recursos no usados
 | Problema | Solución |
 |----------|----------|
 | Docker no corre | `sudo systemctl start docker` o iniciar Docker Desktop |
-| Puerto ocupado | Cambiar `SERVICE_BASE_PORT` en `.env.local` |
+| Puerto ocupado | Cambiar `SERVICE_BASE_PORT` en `.env` |
 | Permisos Docker | `sudo usermod -aG docker $USER` |
 | Contenedor no inicia | `docker logs microservice-{id}` |
 | Red no existe | `docker network create microservices_net` |
-| Variables no cargan | Verificar que `.env.local` existe |
+| Variables no cargan | Verificar que `.env` existe |
 | Servicios no crean | Verificar `ENABLE_DOCKER_RUNTIME=true` |
