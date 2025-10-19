@@ -22,7 +22,7 @@
 
 ##  Descripción del Proyecto
 
-**Microservices Platform** es una plataforma completa y moderna para crear, gestionar y desplegar microservicios de forma sencilla y eficiente. La plataforma permite a los desarrolladores crear microservicios en **Python** o **JavaScript**, gestionarlos a través de un dashboard intuitivo y desplegarlos automáticamente en contenedores Docker.
+**Microservices Platform** es una plataforma completa y moderna para crear, gestionar y desplegar microservicios de forma sencilla y eficiente. La plataforma permite a los desarrolladores crear microservicios en **Python**, gestionarlos a través de un dashboard intuitivo y desplegarlos automáticamente en contenedores Docker.
 
 ###  Objetivo Principal
 

@@ -275,21 +275,8 @@ async function main() {
               >
                 Python
               </button>
-              {type !== "roble" && (
-                <button
-                  type="button"
-                  onClick={() => setLanguage("javascript")}
-                  disabled={isSubmitting}
-                  className={`rounded-md border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
-                    language === "javascript"
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border bg-input text-muted-foreground hover:bg-secondary"
-                  }`}
-                >
-                  JavaScript
-                </button>
-              )}
             </div>
+            <p className="text-xs text-muted-foreground">Actualmente solo está disponible Python para nuevos microservicios.</p>
           </div>
 
           {/* Type */}
