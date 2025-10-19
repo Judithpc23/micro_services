@@ -22,7 +22,7 @@
 
 ##  Descripción del Proyecto
 
-**Microservices Platform** es una plataforma completa y moderna para crear, gestionar y desplegar microservicios de forma sencilla y eficiente. La plataforma permite a los desarrolladores crear microservicios en **Python**, gestionarlos a través de un dashboard intuitivo y desplegarlos automáticamente en contenedores Docker.
+**Microservices Platform** es una plataforma completa y moderna para crear, gestionar y desplegar microservicios de forma sencilla y eficiente. La plataforma permite a los desarrolladores crear microservicios en **Python** o **JavaScript**, gestionarlos a través de un dashboard intuitivo y desplegarlos automáticamente en contenedores Docker.
 
 ###  Objetivo Principal
 
@@ -37,7 +37,6 @@ Simplificar el proceso de creación y gestión de microservicios, permitiendo a 
 ### Características Clave
 
 - **100% Basado en Contenedores Docker**: Cada microservicio se ejecuta en su propio contenedor aislado
-- **Multi-lenguaje**: Soporte para Python y JavaScript
 - **Auto-despliegue**: Generación automática de Dockerfiles y despliegue instantáneo
 - **Dashboard Web**: Interfaz intuitiva para gestionar todos los servicios
 - **Integración Roble**: Soporte para servicios con acceso a bases de datos
@@ -47,7 +46,7 @@ Simplificar el proceso de creación y gestión de microservicios, permitiendo a 
 
 ### Funcionalidades Técnicas
 
-- Crear y gestionar microservicios (Python/JavaScript)
+- Crear y gestionar microservicios (Python)
 - Generación automática de Dockerfiles
 - Control completo de contenedores Docker
 - Dashboard intuitivo con UI moderna
@@ -261,27 +260,8 @@ def suma():
     return f"La suma de {a} y {b} es {resultado}"
 ```
 
-#### Servicios Execution (JavaScript)
 
-**Ejemplo 1: Función Simple**
-```javascript
-function saludar() {
-    return "Hola mundo desde JavaScript";
-}
-```
-
-**Ejemplo 2: Procesador de Datos**
-```javascript
-function process_data(data) {
-    return data.map(item => ({
-        ...item,
-        processed: true,
-        value: item.value * 2
-    }));
-}
-```
-
-#### Servicios Roble (Solo Python)
+#### Servicios Roble
 
 > **Variables necesarias**
 >
